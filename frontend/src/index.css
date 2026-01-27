@@ -1,0 +1,279 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --primary-serious: #0f172a;
+  --institutional-red: #e63946;
+  --institutional-red-dark: #c1121f;
+  --bg-serious: #f8fafc;
+  --text-main: #1e293b;
+  --text-muted: #64748b;
+  --border-light: rgba(0, 0, 0, 0.05);
+
+  --bs-primary: var(--institutional-red);
+  --bs-primary-rgb: 230, 57, 70;
+  --bs-danger: var(--institutional-red);
+  --bs-body-bg: var(--bg-serious);
+}
+
+body {
+  background-color: var(--bg-serious);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  color: var(--text-main);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Tipografía */
+h1,
+h2,
+h3,
+h4,
+h5 {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--primary-serious);
+}
+
+/* Componentes Minimalistas */
+.pro-card {
+  background: white;
+  border: 1px solid var(--border-light);
+  border-radius: 12px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.pro-card-hover:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 30px -5px rgba(230, 57, 70, 0.15);
+  border-color: rgba(230, 57, 70, 0.3) !important;
+}
+
+.pro-input {
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  padding: 10px 12px;
+  transition: all 0.2s ease;
+  background-color: white;
+  font-size: 0.95rem;
+}
+
+.pro-input:focus {
+  border-color: var(--institutional-red);
+  box-shadow: 0 0 0 3px rgba(230, 57, 70, 0.1);
+  outline: none;
+}
+
+/* Botones */
+.btn-institutional {
+  background-color: var(--institutional-red);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-weight: 600;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  font-size: 0.9rem;
+}
+
+.btn-institutional:hover {
+  background-color: var(--institutional-red-dark);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(230, 57, 70, 0.25);
+  color: white;
+}
+
+.btn-institutional:active,
+.btn-institutional:focus,
+.btn-institutional:focus-visible,
+.btn-institutional.active,
+.btn-institutional:not(:disabled):not(.disabled):active {
+  background-color: #9a0f1a !important;
+  box-shadow: 0 0 0 3px rgba(230, 57, 70, 0.2) !important;
+  outline: none !important;
+  color: white !important;
+  border-color: transparent !important;
+}
+
+.btn-institutional:disabled,
+.btn-institutional.disabled {
+  background-color: var(--institutional-red) !important;
+  opacity: 0.7 !important;
+  color: white !important;
+  border-color: transparent !important;
+  cursor: not-allowed !important;
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid transparent;
+  border-radius: 8px;
+  padding: 8px 16px;
+  transition: all 0.2s ease;
+}
+
+.btn-ghost:hover {
+  background: rgba(0, 0, 0, 0.03);
+  color: var(--primary-serious);
+}
+
+/* Utilidades de Layout */
+.navbar-minimalist {
+  background-color: rgba(255, 255, 255, 0.8) !important;
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border-light);
+}
+
+.nav-link-pro {
+  font-weight: 500;
+  color: var(--text-muted) !important;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+  position: relative;
+}
+
+.nav-link-pro:hover {
+  color: var(--primary-serious) !important;
+}
+
+.nav-link-pro.active {
+  color: var(--institutional-red) !important;
+}
+
+.nav-link-pro.active::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 1rem;
+  right: 1rem;
+  height: 2px;
+  background-color: var(--institutional-red);
+  border-radius: 2px;
+}
+
+/* Transiciones */
+.transition-fast {
+  transition: all 0.2s ease;
+}
+
+.transition-all {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.scale-hover:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(230, 57, 70, 0.15);
+}
+
+.hover-light-bg:hover {
+  background-color: rgba(0, 0, 0, 0.03) !important;
+  color: var(--primary-serious) !important;
+  transform: translateY(-1px);
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+/* Tarjetas de Acceso Rápido */
+.quick-access-tile {
+  background: white;
+  border: 1px solid var(--border-light);
+  border-radius: 12px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.quick-access-tile .icon-wrapper {
+  background: rgba(230, 57, 70, 0.05);
+  color: var(--institutional-red);
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.quick-access-tile .tile-title {
+  color: var(--primary-serious);
+  font-weight: 700;
+  font-size: 0.9rem;
+  line-height: 1.2;
+}
+
+.quick-access-tile .tile-subtitle {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  margin-top: 2px;
+}
+
+.quick-access-tile .arrow-icon {
+  opacity: 0;
+  transform: translateX(-10px);
+  transition: all 0.3s ease;
+  color: var(--institutional-red);
+}
+
+.quick-access-tile:hover {
+  border-color: rgba(230, 57, 70, 0.3);
+  background: rgba(230, 57, 70, 0.02);
+  transform: scale(1.02);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+.quick-access-tile:hover .icon-wrapper {
+  background: var(--institutional-red);
+  color: white;
+  transform: rotate(-5deg);
+}
+
+.quick-access-tile:hover .arrow-icon {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* Sobrescrituras Globales de Estado de Botones */
+.btn:focus,
+.btn:active,
+.btn:focus-visible {
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+.btn-outline-danger:active,
+.btn-outline-danger:focus {
+  background-color: #c1121f !important;
+  border-color: #c1121f !important;
+  color: white !important;
+}
+
+.btn-outline-success:active,
+.btn-outline-success:focus {
+  background-color: #157347 !important;
+  border-color: #157347 !important;
+  color: white !important;
+}
+
+.btn-link:focus,
+.btn-link:active {
+  color: var(--institutional-red) !important;
+  text-decoration: none !important;
+}
+
+/* Sobrescritura de Botones Bootstrap - Prevenir Azul */
+button:focus,
+button:active,
+.btn:focus,
+.btn:active {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+button[type="submit"]:focus,
+button[type="submit"]:active {
+  outline: none !important;
+  box-shadow: none !important;
+}

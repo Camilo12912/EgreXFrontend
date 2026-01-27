@@ -1,0 +1,9 @@
+{
+    "short_name": "Egresados",
+    "name": "Sistema de Gestión de Egresados",
+    "icons": [],
+    "start_url": ".",
+    "display": "standalone",
+    "theme_color": "#000000",
+    "background_color": "#ffffff"
+}
