@@ -121,7 +121,8 @@ const Events = () => {
             }
         } catch (err) {
             console.error('Error checking profile status:', err);
-            // On error, we usually want to be safe and assume it might need update if unauthorized
+            // If profile doesn't exist (404) or any error occurs, require update for safety
+            setProfileNeedsUpdate(true);
         }
     };
 
