@@ -65,8 +65,10 @@ const Events = () => {
         imageUrl: ''
     });
     const [error, setError] = useState('');
-    const [showRegisterModal, setShowRegisterModal] = useState(false);
+    const [showDetailModal, setShowDetailModal] = useState(false);
     const [selectedEvent, setSelectedEvent] = useState(null);
+    const [imageFile, setImageFile] = useState(null);
+    const [imagePreview, setImagePreview] = useState(null);
     const [profileNeedsUpdate, setProfileNeedsUpdate] = useState(false);
 
     const [participants, setParticipants] = useState([]);
@@ -83,7 +85,27 @@ const Events = () => {
 
     useEffect(() => {
         fetchEvents();
+        checkProfileStatus();
     }, []);
+
+    const checkProfileStatus = async () => {
+        try {
+            const response = await api.get('/profile');
+            if (response.data && response.data.fecha_actualizacion) {
+                const lastUpdate = new Date(response.data.fecha_actualizacion);
+                const fourMonthsAgo = new Date();
+                fourMonthsAgo.setMonth(fourMonthsAgo.getMonth() - 4);
+
+                if (lastUpdate < fourMonthsAgo) {
+                    setProfileNeedsUpdate(true);
+                }
+            } else {
+                setProfileNeedsUpdate(true);
+            }
+        } catch (err) {
+            console.error('Error checking profile status:', err);
+        }
+    };
 
     const fetchEvents = async () => {
         try {
@@ -123,6 +145,16 @@ const Events = () => {
         } finally {
             setIsDeleting(false);
         }
+    };
+
+    const handleRegisterClick = (event) => {
+        if (profileNeedsUpdate) {
+            setError('Importante: Debes actualizar tus datos de perfil para poder inscribirte en eventos. La actualización es obligatoria cada 4 meses.');
+            window.scrollTo(0, 0);
+            return;
+        }
+        setSelectedEvent(event);
+        setShowDetailModal(true);
     };
 
     const handleShowDetails = (event) => {
