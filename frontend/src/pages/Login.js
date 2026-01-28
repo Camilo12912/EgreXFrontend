@@ -22,7 +22,7 @@ const Login = () => {
         if (user.role === 'admin') {
           navigate('/admin/dashboard', { replace: true });
         } else {
-          navigate('/profile', { replace: true });
+          navigate('/events', { replace: true });
         }
       } catch (e) {
         localStorage.removeItem('user');
