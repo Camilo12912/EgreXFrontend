@@ -115,7 +115,9 @@ const Profile = () => {
   const nextStep = () => {
     // Basic validation for current step
     if (currentStep === 1) {
-      if (!formData.correo_personal || !formData.nombre || !formData.identificacion || !formData.telefono || !formData.ciudad_residencia || !formData.barrio || !formData.direccion_domicilio) {
+      const requiredFields = ['correo_personal', 'nombre', 'identificacion', 'telefono', 'ciudad_residencia', 'barrio', 'direccion_domicilio'];
+      const missing = requiredFields.filter(field => !formData[field] || formData[field].toString().trim() === '');
+      if (missing.length > 0) {
         setError('Por favor complete todos los campos obligatorios del paso 1.');
         window.scrollTo(0, 0);
         return;
@@ -133,7 +135,7 @@ const Profile = () => {
         return;
       }
       if (formData.laboralmente_activo !== 'NO') {
-        if (!formData.ejerce_perfil_profesional || !formData.sector_economico || !formData.rango_salarial) {
+        if (!formData.ejerce_perfil_profesional || !formData.sector_economico || !formData.rango_salarial || !formData.cargo_actual || !formData.nombre_empresa) {
           setError('Por favor complete todos los campos obligatorios del paso 3.');
           window.scrollTo(0, 0);
           return;
@@ -230,8 +232,13 @@ const Profile = () => {
           <div key={step.id} className="text-center" style={{ zIndex: 1, width: '60px' }}>
             <div
               className={`rounded-circle d-flex align-items-center justify-content-center mx-auto transition-fast mb-2 shadow-sm
-                ${currentStep >= step.id ? 'bg-institutional text-white' : 'bg-white border text-muted'}`}
-              style={{ width: '40px', height: '40px', color: currentStep >= step.id ? 'white' : 'var(--institutional-red)' }}
+                ${currentStep >= step.id ? 'bg-institutional' : 'bg-white border text-muted'}`}
+              style={{
+                width: '40px',
+                height: '40px',
+                color: currentStep >= step.id ? 'white' : 'var(--institutional-red)',
+                border: currentStep >= step.id ? 'none' : '2px solid #e2e8f0'
+              }}
             >
               {step.icon}
             </div>

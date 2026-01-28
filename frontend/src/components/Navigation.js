@@ -69,7 +69,7 @@ const Navigation = () => {
         <Navbar.Toggle aria-controls="basic-navbar-nav" className="border-0 shadow-none" />
 
         <Navbar.Collapse id="basic-navbar-nav">
-          <Nav className="ms-auto me-4">
+          <Nav className="ms-auto align-items-center">
             <Nav.Link
               as={Link}
               to="/events"
@@ -78,13 +78,15 @@ const Navigation = () => {
               Eventos
             </Nav.Link>
 
-            <Nav.Link
-              as={Link}
-              to="/profile"
-              className={`nav-link-pro px-3 ${isActive('/profile') ? 'active' : ''}`}
-            >
-              Perfil
-            </Nav.Link>
+            {user && user.role !== 'admin' && (
+              <Nav.Link
+                as={Link}
+                to="/profile"
+                className={`nav-link-pro px-3 ${isActive('/profile') ? 'active' : ''}`}
+              >
+                Perfil
+              </Nav.Link>
+            )}
 
             {user && user.role === 'admin' && (
               <Nav.Link
@@ -95,42 +97,44 @@ const Navigation = () => {
                 Panel Admin
               </Nav.Link>
             )}
-          </Nav>
 
-          <Nav className="align-items-center">
-            <Dropdown align="end">
-              <Dropdown.Toggle variant="transparent" className="p-0 border-0 d-flex align-items-center gap-2 no-caret">
-                <div
-                  className="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold shadow-sm transition-fast"
-                  style={{
-                    width: '38px',
-                    height: '38px',
-                    background: 'var(--institutional-red)',
-                    fontSize: '0.85rem',
-                    letterSpacing: '0.5px'
-                  }}
-                >
-                  {getInitials()}
-                </div>
-              </Dropdown.Toggle>
+            <div className="ms-lg-4 mt-3 mt-lg-0">
+              <Dropdown align="end">
+                <Dropdown.Toggle variant="transparent" className="p-0 border-0 d-flex align-items-center gap-2 no-caret">
+                  <div
+                    className="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold shadow-sm transition-fast"
+                    style={{
+                      width: '38px',
+                      height: '38px',
+                      background: 'var(--institutional-red)',
+                      fontSize: '0.85rem',
+                      letterSpacing: '0.5px'
+                    }}
+                  >
+                    {getInitials()}
+                  </div>
+                </Dropdown.Toggle>
 
-              <Dropdown.Menu className="border-0 shadow-lg mt-2 py-2 dropdown-menu-minimal">
-                <div className="px-3 py-2 border-bottom mb-2 d-lg-none">
-                  <div className="fw-bold small text-serious">{user?.nombre || 'Usuario'}</div>
-                  <div className="text-muted" style={{ fontSize: '0.7rem' }}>{user?.email}</div>
-                </div>
+                <Dropdown.Menu className="border-0 shadow-lg mt-2 py-2 dropdown-menu-minimal">
+                  <div className="px-3 py-2 border-bottom mb-2 d-lg-none">
+                    <div className="fw-bold small text-serious">{user?.nombre || 'Usuario'}</div>
+                    <div className="text-muted" style={{ fontSize: '0.7rem' }}>{user?.email}</div>
+                  </div>
 
-                <Dropdown.Item as={Link} to="/profile" className="py-2 d-flex align-items-center gap-2 small fw-medium">
-                  <FaUser className="opacity-50" /> Mi Perfil
-                </Dropdown.Item>
+                  {user?.role !== 'admin' && (
+                    <Dropdown.Item as={Link} to="/profile" className="py-2 d-flex align-items-center gap-2 small fw-medium">
+                      <FaUser className="opacity-50" /> Mi Perfil
+                    </Dropdown.Item>
+                  )}
 
-                <Dropdown.Divider />
+                  <Dropdown.Divider />
 
-                <Dropdown.Item onClick={handleLogout} className="py-2 d-flex align-items-center gap-2 small fw-medium text-danger">
-                  <FaSignOutAlt /> Cerrar Sesión
-                </Dropdown.Item>
-              </Dropdown.Menu>
-            </Dropdown>
+                  <Dropdown.Item onClick={handleLogout} className="py-2 d-flex align-items-center gap-2 small fw-medium text-danger">
+                    <FaSignOutAlt /> Cerrar Sesión
+                  </Dropdown.Item>
+                </Dropdown.Menu>
+              </Dropdown>
+            </div>
           </Nav>
         </Navbar.Collapse>
       </Container>

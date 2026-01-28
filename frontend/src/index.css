@@ -23,6 +23,10 @@
   color: var(--institutional-red) !important;
 }
 
+.bg-institutional {
+  background-color: var(--institutional-red) !important;
+}
+
 body {
   background-color: var(--bg-serious);
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
