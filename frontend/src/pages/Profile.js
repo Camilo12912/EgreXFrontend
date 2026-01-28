@@ -24,6 +24,7 @@ const Profile = () => {
     nombre_empresa: '',
     rango_salarial: '',
     ejerce_perfil_profesional: '',
+    profesion: '',
     reconocimientos: '',
     tratamiento_datos: ''
   });
@@ -92,6 +93,7 @@ const Profile = () => {
           nombre_empresa: d.nombre_empresa || d.empresa || '',
           rango_salarial: d.rango_salarial || '',
           ejerce_perfil_profesional: d.ejerce_perfil_profesional || '',
+          profesion: d.profesion || '',
           reconocimientos: d.reconocimientos || '',
           tratamiento_datos: d.tratamiento_datos ? 'SI' : 'NO'
         });
@@ -124,8 +126,6 @@ const Profile = () => {
     try {
       let payload = {
         ...formData,
-        profesion: formData.cargo_actual,
-        empresa: formData.nombre_empresa,
         tratamiento_datos: true
       };
 
@@ -137,7 +137,8 @@ const Profile = () => {
           nombre_empresa: '',
           rango_salarial: '',
           profesion: '',
-          empresa: ''
+          empresa: '',
+          ejerce_perfil_profesional: 'NO'
         };
       }
 
@@ -229,6 +230,12 @@ const Profile = () => {
                             <Form.Control required type="text" maxLength="10" name="telefono" value={formData.telefono} onChange={handleChange} className="pro-input" />
                           </Form.Group>
                         </Col>
+                        <Col md={12}>
+                          <Form.Group>
+                            <Form.Label className="small fw-bold text-secondary">TÍTULO O PROFESIÓN <span className="text-institutional">*</span></Form.Label>
+                            <Form.Control required type="text" name="profesion" value={formData.profesion} onChange={handleChange} placeholder="Ej: Ingeniero de Software, Administrador, etc." className="pro-input" />
+                          </Form.Group>
+                        </Col>
                         <Col md={6}>
                           <Form.Group>
                             <Form.Label className="small fw-bold text-secondary">CIUDAD DE RESIDENCIA <span className="text-institutional">*</span></Form.Label>
@@ -302,6 +309,15 @@ const Profile = () => {
 
                         {formData.laboralmente_activo !== 'NO' && (
                           <>
+                            <Col md={12}>
+                              <Form.Group>
+                                <Form.Label className="small fw-bold text-secondary d-block mb-3">¿EJERCE SU PERFIL PROFESIONAL? <span className="text-institutional">*</span></Form.Label>
+                                <div className="d-flex gap-4">
+                                  <Form.Check type="radio" label="SÍ" name="ejerce_perfil_profesional" value="SI" checked={formData.ejerce_perfil_profesional === 'SI'} onChange={handleChange} required className="small" />
+                                  <Form.Check type="radio" label="NO" name="ejerce_perfil_profesional" value="NO" checked={formData.ejerce_perfil_profesional === 'NO'} onChange={handleChange} className="small" />
+                                </div>
+                              </Form.Group>
+                            </Col>
                             <Col md={6}>
                               <Form.Group>
                                 <Form.Label className="small fw-bold text-secondary">CARGO ACTUAL</Form.Label>
@@ -399,7 +415,7 @@ const Profile = () => {
           </Col>
         </Row>
       </Container>
-    </div>
+    </div >
   );
 };
 

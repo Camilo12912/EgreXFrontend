@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Button, Modal, Form, Alert, Badge, Spinner, Table, Dropdown, OverlayTrigger, Tooltip } from 'react-bootstrap';
+import { Container, Row, Col, Card, Button, Modal, Form, Alert, Badge, Spinner, Table, Dropdown, OverlayTrigger, Tooltip, Offcanvas } from 'react-bootstrap';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaCalendarAlt, FaMapMarkerAlt, FaPlus, FaTrash, FaChevronRight, FaUserCheck, FaUsers, FaFilePdf, FaFileExcel, FaDownload } from 'react-icons/fa';
 import api from '../services/api';
@@ -561,97 +561,93 @@ const Events = () => {
                     </Modal.Body>
                 </Modal>
 
-                {/* Participants Modal */}
-                <AnimatePresence>
-                    {showParticipantsModal && (
-                        <Modal
-                            show={showParticipantsModal}
-                            onHide={() => setShowParticipantsModal(false)}
-                            centered
-                            size="lg"
-                            className="minimal-modal"
-                        >
-                            <motion.div
-                                initial={{ opacity: 0, scale: 0.95 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                exit={{ opacity: 0, scale: 0.95 }}
-                            >
-                                <Modal.Body className="p-4 p-md-5">
-                                    <div className="mb-4 d-flex align-items-center justify-content-between">
-                                        <div className="d-flex align-items-center gap-3">
-                                            <div className="bg-light text-institutional p-2 rounded-circle">
-                                                <FaUsers size={20} />
+                {/* Participants List (Offcanvas) */}
+                <Offcanvas
+                    show={showParticipantsModal}
+                    onHide={() => setShowParticipantsModal(false)}
+                    placement="end"
+                    className="border-0 shadow-lg"
+                    style={{ width: 'min(95vw, 500px)' }}
+                >
+                    <Offcanvas.Header closeButton className="border-bottom px-4 py-3">
+                        <div className="d-flex align-items-center gap-3">
+                            <div className="bg-light text-institutional p-2 rounded-circle" style={{ width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <FaUsers size={20} />
+                            </div>
+                            <Offcanvas.Title className="fw-bold mb-0">Egresados Inscritos</Offcanvas.Title>
+                        </div>
+                    </Offcanvas.Header>
+                    <Offcanvas.Body className="p-0">
+                        <div className="p-4 border-bottom bg-light d-flex justify-content-between align-items-center">
+                            <div className="small text-muted fw-bold uppercase">
+                                {participants.length} Registrados
+                            </div>
+                            {participants.length > 0 && (
+                                <Dropdown>
+                                    <Dropdown.Toggle
+                                        variant="outline-secondary"
+                                        size="sm"
+                                        className="px-3 shadow-none d-flex align-items-center gap-2 no-caret"
+                                        style={{ borderRadius: '8px', fontSize: '13px' }}
+                                    >
+                                        <FaDownload size={14} /> EXPORTAR
+                                    </Dropdown.Toggle>
+
+                                    <Dropdown.Menu align="end" className="border-0 shadow-sm dropdown-menu-minimal">
+                                        <Dropdown.Item onClick={exportToPDF} className="d-flex align-items-center gap-2 py-2 small">
+                                            <FaFilePdf className="text-danger" /> <span>Exportar PDF</span>
+                                        </Dropdown.Item>
+                                        <Dropdown.Item onClick={exportToExcel} className="d-flex align-items-center gap-2 py-2 small">
+                                            <FaFileExcel className="text-success" /> <span>Exportar Excel</span>
+                                        </Dropdown.Item>
+                                    </Dropdown.Menu>
+                                </Dropdown>
+                            )}
+                        </div>
+
+                        <div className="p-0">
+                            {loadingParticipants ? (
+                                <div className="text-center py-5">
+                                    <Spinner animation="border" variant="danger" />
+                                </div>
+                            ) : participants.length > 0 ? (
+                                <div className="list-group list-group-flush">
+                                    {participants.map((p, idx) => (
+                                        <motion.div
+                                            key={p.id || idx}
+                                            initial={{ opacity: 0, x: 20 }}
+                                            animate={{ opacity: 1, x: 0 }}
+                                            transition={{ delay: idx * 0.05 }}
+                                            className="list-group-item border-0 border-bottom p-4 hover-bg-light"
+                                        >
+                                            <div className="d-flex justify-content-between align-items-start mb-1">
+                                                <h6 className="fw-bold mb-0 text-serious">{p.nombre || 'Sin perfil registrado'}</h6>
+                                                <Badge bg="light" className="text-institutional small border fw-bold">ID: {p.identificacion || '-'}</Badge>
                                             </div>
-                                            <h4 className="fw-bold mb-0">Egresados Inscritos</h4>
-                                        </div>
-                                        {participants.length > 0 && (
-                                            <OverlayTrigger placement="top" overlay={<Tooltip>Descargar Lista</Tooltip>}>
-                                                <Dropdown>
-                                                    <Dropdown.Toggle
-                                                        variant="outline-secondary"
-                                                        size="sm"
-                                                        className="p-2 shadow-none d-flex align-items-center justify-content-center no-caret"
-                                                        style={{ width: '36px', height: '36px', borderRadius: '8px' }}
-                                                    >
-                                                        <FaDownload size={16} />
-                                                    </Dropdown.Toggle>
-
-                                                    <Dropdown.Menu align="end" className="border-0 shadow-sm dropdown-menu-minimal">
-                                                        <Dropdown.Item onClick={exportToPDF} className="d-flex align-items-center gap-2 py-2 small">
-                                                            <FaFilePdf className="text-danger" /> <span>Exportar PDF</span>
-                                                        </Dropdown.Item>
-                                                        <Dropdown.Item onClick={exportToExcel} className="d-flex align-items-center gap-2 py-2 small">
-                                                            <FaFileExcel className="text-success" /> <span>Exportar Excel</span>
-                                                        </Dropdown.Item>
-                                                    </Dropdown.Menu>
-                                                </Dropdown>
-                                            </OverlayTrigger>
-                                        )}
+                                            <div className="small text-muted mb-2">{p.email}</div>
+                                            <div className="d-flex flex-wrap gap-2 mt-2">
+                                                <Badge bg="light" className="text-muted border-0 fw-normal small px-2 py-1">
+                                                    {p.programa_academico || 'Sin programa'}
+                                                </Badge>
+                                                <div className="ms-auto small text-muted italic" style={{ fontSize: '11px' }}>
+                                                    Inscrito: {new Date(p.registered_at).toLocaleDateString()}
+                                                </div>
+                                            </div>
+                                        </motion.div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="text-center py-5 px-4">
+                                    <div className="bg-light text-muted p-4 rounded-circle d-inline-block mb-3">
+                                        <FaUsers size={40} opacity={0.3} />
                                     </div>
-
-                                    {loadingParticipants ? (
-                                        <div className="text-center py-5">
-                                            <Spinner animation="border" variant="danger" />
-                                        </div>
-                                    ) : (
-                                        <div className="overflow-auto" style={{ maxHeight: '400px' }}>
-                                            <Table hover responsive className="small align-middle">
-                                                <thead>
-                                                    <tr>
-                                                        <th className="text-muted uppercase fw-bold border-0">Nombre</th>
-                                                        <th className="text-muted uppercase fw-bold border-0">Email</th>
-                                                        <th className="text-muted uppercase fw-bold border-0">Programa</th>
-                                                        <th className="text-muted uppercase fw-bold border-0">Fecha Registro</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    {participants.length > 0 ? participants.map((p, idx) => (
-                                                        <tr key={idx}>
-                                                            <td className="fw-bold">{p.nombre || 'Sin perfil'}</td>
-                                                            <td>{p.email}</td>
-                                                            <td className="text-institutional">{p.programa_academico || '-'}</td>
-                                                            <td className="text-muted">{new Date(p.registered_at).toLocaleString()}</td>
-                                                        </tr>
-                                                    )) : (
-                                                        <tr>
-                                                            <td colSpan="4" className="text-center py-4 text-muted">Aún no hay inscritos para este evento</td>
-                                                        </tr>
-                                                    )}
-                                                </tbody>
-                                            </Table>
-                                        </div>
-                                    )}
-
-                                    <div className="mt-4 text-end">
-                                        <Button variant="link" className="text-serious fw-bold text-decoration-none" onClick={() => setShowParticipantsModal(false)}>
-                                            CERRAR
-                                        </Button>
-                                    </div>
-                                </Modal.Body>
-                            </motion.div>
-                        </Modal>
-                    )}
-                </AnimatePresence>
+                                    <h5 className="fw-bold">No hay inscritos aún</h5>
+                                    <p className="text-muted small">Tan pronto como los egresados se inscriban, aparecerán en esta lista.</p>
+                                </div>
+                            )}
+                        </div>
+                    </Offcanvas.Body>
+                </Offcanvas>
             </Container>
         </div>
     );
