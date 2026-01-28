@@ -604,25 +604,46 @@ const Events = () => {
                 </Modal>
 
                 {/* Participants List (Offcanvas) */}
-                <Offcanvas
+                {/* Modal de Lista de Inscritos (Reemplaza al Offcanvas) */}
+                <Modal
                     show={showParticipantsModal}
                     onHide={() => setShowParticipantsModal(false)}
-                    placement="end"
-                    className="border-0 shadow-lg"
-                    style={{ width: 'min(95vw, 500px)' }}
+                    centered
+                    size="lg"
+                    className="minimal-modal"
                 >
-                    <Offcanvas.Header closeButton className="border-bottom px-4 py-3">
-                        <div className="d-flex align-items-center gap-3">
-                            <div className="bg-light text-institutional p-2 rounded-circle" style={{ width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                <FaUsers size={20} />
+                    <Modal.Header className="border-0 p-4 pb-0 d-flex justify-content-between align-items-center">
+                        <div>
+                            <Modal.Title className="fw-bold text-serious d-flex align-items-center gap-2">
+                                <FaUsers className="text-institutional" />
+                                Egresados Inscritos
+                            </Modal.Title>
+                            <div className="small text-muted mt-1 uppercase fw-bold tracking-tight">
+                                {selectedEvent?.title}
                             </div>
-                            <Offcanvas.Title className="fw-bold mb-0">Egresados Inscritos</Offcanvas.Title>
                         </div>
-                    </Offcanvas.Header>
-                    <Offcanvas.Body className="p-0">
-                        <div className="p-4 border-bottom bg-light d-flex justify-content-between align-items-center">
+                        <div className="d-flex gap-2">
+                            {selectedEvent && (
+                                <Button
+                                    variant="link"
+                                    className="text-muted text-decoration-none small fw-bold"
+                                    onClick={() => {
+                                        setShowParticipantsModal(false);
+                                        setShowDetailModal(true);
+                                    }}
+                                >
+                                    REGRESAR
+                                </Button>
+                            )}
+                            <Button variant="light" className="rounded-circle p-2 px-3" onClick={() => setShowParticipantsModal(false)}>
+                                <FaPlus style={{ transform: 'rotate(45deg)' }} size={14} />
+                            </Button>
+                        </div>
+                    </Modal.Header>
+                    <Modal.Body className="p-0">
+                        <div className="px-4 py-3 border-bottom bg-light d-flex justify-content-between align-items-center">
                             <div className="small text-muted fw-bold uppercase">
-                                {participants.length} Registrados
+                                {participants.length} REGISTRADOS
                             </div>
                             {participants.length > 0 && (
                                 <Dropdown>
@@ -647,7 +668,7 @@ const Events = () => {
                             )}
                         </div>
 
-                        <div className="p-0">
+                        <div style={{ maxHeight: '60vh', overflowY: 'auto' }}>
                             {loadingParticipants ? (
                                 <div className="text-center py-5">
                                     <Spinner animation="border" variant="danger" />
@@ -657,8 +678,8 @@ const Events = () => {
                                     {participants.map((p, idx) => (
                                         <motion.div
                                             key={p.id || idx}
-                                            initial={{ opacity: 0, x: 20 }}
-                                            animate={{ opacity: 1, x: 0 }}
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
                                             transition={{ delay: idx * 0.05 }}
                                             className="list-group-item border-0 border-bottom p-4 hover-bg-light"
                                         >
@@ -688,8 +709,8 @@ const Events = () => {
                                 </div>
                             )}
                         </div>
-                    </Offcanvas.Body>
-                </Offcanvas>
+                    </Modal.Body>
+                </Modal>
                 {/* Modal de Confirmación de Eliminación */}
                 <Modal show={showDeleteConfirm} onHide={() => setShowDeleteConfirm(false)} centered className="minimal-modal">
                     <Modal.Body className="p-4 text-center">
