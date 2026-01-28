@@ -463,7 +463,14 @@ const Events = () => {
                                             </>
                                         )}
                                         {isAdmin && (
-                                            <Button variant="outline-dark" className="py-3" onClick={() => fetchParticipants(selectedEvent.id)}>
+                                            <Button
+                                                variant="outline-dark"
+                                                className="py-3"
+                                                onClick={() => {
+                                                    setShowDetailModal(false);
+                                                    fetchParticipants(selectedEvent.id);
+                                                }}
+                                            >
                                                 VER LISTA DE INSCRITOS
                                             </Button>
                                         )}
