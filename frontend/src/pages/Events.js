@@ -101,12 +101,18 @@ const Events = () => {
             }
 
             // check if key fields are missing (newly created profile)
-            const isIncomplete = !data.nombre || !data.programa_academico || !data.profesion || !data.correo_personal || !data.tratamiento_datos;
+            const isIncomplete =
+                !data.nombre?.toString().trim() ||
+                !data.programa_academico ||
+                !data.profesion?.toString().trim() ||
+                !data.correo_personal?.toString().trim() ||
+                !data.tratamiento_datos;
 
             // check 4 month rule
             let isOutdated = false;
-            if (data.fecha_actualizacion) {
-                const lastUpdate = new Date(data.fecha_actualizacion);
+            const lastUpdate = data.fecha_actualizacion ? new Date(data.fecha_actualizacion) : null;
+
+            if (lastUpdate) {
                 const fourMonthsAgo = new Date();
                 fourMonthsAgo.setMonth(fourMonthsAgo.getMonth() - 4);
                 if (lastUpdate < fourMonthsAgo) {
@@ -116,15 +122,15 @@ const Events = () => {
                 isOutdated = true; // No date means never updated
             }
 
-            if (isIncomplete || isOutdated) {
-                setProfileNeedsUpdate(true);
-            } else {
-                setProfileNeedsUpdate(false);
-            }
+            setProfileNeedsUpdate(isIncomplete || isOutdated);
         } catch (err) {
-            console.error('Error checking profile status:', err);
-            // If profile doesn't exist (404) or any error occurs, require update for safety
-            setProfileNeedsUpdate(true);
+            console.error('Error fetching profile status:', err);
+            // If it's 404, it definitely needs update (no profile record)
+            if (err.response?.status === 404) {
+                setProfileNeedsUpdate(true);
+            }
+            // For other errors (e.g. 500), we might not want to block them if they already had a session
+            // but for now, let's keep it safe.
         }
     };
 
@@ -169,7 +175,7 @@ const Events = () => {
     };
 
     const handleRegisterClick = (event) => {
-        if (profileNeedsUpdate) {
+        if (profileNeedsUpdate && !isAdmin) {
             setError('Importante: Debes actualizar tus datos de perfil para poder inscribirte en eventos. La actualización es obligatoria cada 4 meses.');
             window.scrollTo(0, 0);
             return;
@@ -184,7 +190,7 @@ const Events = () => {
     };
 
     const handleRegister = async () => {
-        if (profileNeedsUpdate) {
+        if (profileNeedsUpdate && !isAdmin) {
             setError('Importante: Tu perfil está incompleto o desactualizado (requerido cada 4 meses). Debes actualizar tus datos para inscribirte a eventos.');
             setShowDetailModal(false);
             window.scrollTo(0, 0);

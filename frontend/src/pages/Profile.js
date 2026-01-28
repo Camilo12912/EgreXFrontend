@@ -147,7 +147,6 @@ const Profile = () => {
           sector_economico: '',
           nombre_empresa: '',
           rango_salarial: '',
-          profesion: '',
           empresa: '',
           ejerce_perfil_profesional: 'NO'
         };
