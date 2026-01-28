@@ -19,7 +19,6 @@ COPY --from=builder /app/package*.json ./
 RUN npm ci --only=production
 
 COPY --from=builder /app/src ./src
-COPY --from=builder /app/init_db.js ./init_db.js
 
 # Cloud Run sets the PORT environment variable.
 # We default to 8080 if not set.

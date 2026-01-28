@@ -15,20 +15,10 @@ async function waitForDb(retries = 10, delay = 5000) {
     throw new Error('No se pudo conectar a la base de datos después de múltiples intentos.');
 }
 
-async function initDb() {
+async function initializeDatabase() {
     try {
         await waitForDb();
-        console.log('Limpiando base de datos (DROP ALL TABLES)...');
-        await db.query(`
-            DROP TABLE IF EXISTS event_registrations CASCADE;
-            DROP TABLE IF EXISTS events CASCADE;
-            DROP TABLE IF EXISTS profile_modifications CASCADE;
-            DROP TABLE IF EXISTS egresados_profiles CASCADE;
-            DROP TABLE IF EXISTS users CASCADE;
-        `);
-        console.log('Base de datos limpia.');
-
-        console.log('Inicializando base de datos completa...');
+        console.log('Verificando e inicializando tablas de la base de datos...');
 
         // 1. Users Table
         await db.query(`
@@ -43,7 +33,7 @@ async function initDb() {
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
         `);
-        console.log('- Tabla users verificada.');
+        console.log('- Tabla "users" lista.');
 
         // 2. Profiles Table
         await db.query(`
@@ -72,7 +62,7 @@ async function initDb() {
                 fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
         `);
-        console.log('- Tabla egresados_profiles verificada.');
+        console.log('- Tabla "egresados_profiles" lista.');
 
         // 3. Profile History Table
         await db.query(`
@@ -87,7 +77,7 @@ async function initDb() {
                 change_type VARCHAR(50) DEFAULT 'update'
             );
         `);
-        console.log('- Tabla profile_modifications verificada.');
+        console.log('- Tabla "profile_modifications" lista.');
 
         // 4. Events Table
         await db.query(`
@@ -102,7 +92,7 @@ async function initDb() {
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
         `);
-        console.log('- Tabla events verificada.');
+        console.log('- Tabla "events" lista.');
 
         // 5. Event Registrations Table
         await db.query(`
@@ -114,14 +104,12 @@ async function initDb() {
                 UNIQUE(event_id, user_id)
             );
         `);
-        console.log('- Tabla event_registrations verificada.');
+        console.log('- Tabla "event_registrations" lista.');
 
         // 6. Seed Admin User
         const adminEmail = 'admin@fesc.edu.co';
-        // Password requested by user: "admin"
         const adminPass = 'admin';
         const adminHash = await bcrypt.hash(adminPass, 10);
-        // Identification requested by user: "admin" (Login uses identification field)
         const adminId = 'admin';
 
         const checkAdmin = await db.query('SELECT * FROM users WHERE email = $1', [adminEmail]);
@@ -130,17 +118,16 @@ async function initDb() {
                 INSERT INTO users (id, email, identificacion, password_hash, role)
                 VALUES (gen_random_uuid(), $1, $2, $3, 'admin')
             `, [adminEmail, adminId, adminHash]);
-            console.log(`- Usuario Admin creado: Identificación (Login)=${adminId} / Pass=${adminPass}`);
-        } else {
-            console.log('- Usuario Admin ya existe.');
+            console.log(`- Usuario Admin creado por defecto: ${adminId} / ${adminPass}`);
         }
 
-        console.log('Inicialización completada con éxito.');
-        process.exit(0);
+        console.log('Inicialización de base de datos terminada satisfactoriamente.');
     } catch (error) {
-        console.error('CRITICAL: Error inicializando DB:', error);
-        process.exit(1);
+        console.error('ERROR CRÍTICO en la inicialización de la DB:', error);
+        // No cerramos el proceso para permitir que el backend intente seguir si es un error no fatal,
+        // o que el orquestador (Docker) maneje el reinicio.
+        throw error;
     }
 }
 
-initDb();
+module.exports = initializeDatabase;
