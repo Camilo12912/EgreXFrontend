@@ -19,12 +19,12 @@ El **Sistema de Gestión de Egresados (EgreX)** es una plataforma integral dise�
 
 ## 📦 Despliegue Rápido (Docker)
 
-La forma más sencilla de poner el sistema a prueba es usando Docker:
+Para iniciar todo el sistema (Frontend, Backend y Base de Datos) desde esta carpeta:
 
-1. **Clonar el repositorio.**
+1. **Asegúrate de que la carpeta `egrex-backend` esté en el mismo nivel que esta carpeta en tu escritorio.**
 2. **Ejecutar el comando de arranque:**
    ```bash
-   docker-compose up --build -d
+   docker compose up --build -d
    ```
 3. **Acceder al sistema:**
    - **Frontend:** `http://localhost`
@@ -32,41 +32,22 @@ La forma más sencilla de poner el sistema a prueba es usando Docker:
 
 ### 🔑 Credenciales por Defecto
 El sistema crea automáticamente un administrador inicial:
-- **Usuario (Email/ID):** `admin` (en el campo de login)
+- **Usuario:** `admin`
 - **Contraseña:** `admin`
 
-## ⚙️ Configuración Manual (Desarrollo)
-
-### Backend
-1. Ir a `/backend`, crear un `.env` basado en las variables de `docker-compose.yml`.
-2. Ejecutar `npm install` y luego `npm start`.
-3. El servidor se encargará de crear las tablas si la DB está vacía.
-
-### Frontend
-1. Ir a `/frontend`.
-2. Ejecutar `npm install` y luego `npm start`.
-3. La aplicación estará en `http://localhost:3000`.
-
-## 📁 Estructura del Proyecto
+## 📁 Estructura del Proyecto (Actualizado)
 
 ```
-/
-├── backend/                # API REST Autónoma
+Escritorio/
+├── egrex-backend/          # Repositorio del Backend
 │   ├── src/
-│   │   ├── config/         # Inicialización de DB e Init seguro
-│   │   ├── controllers/    # Lógica de Egresados y Eventos
-│   │   ├── models/         # Modelos de datos
-│   │   └── server.js       # Punto de entrada autónomo
 │   └── Dockerfile
-│
-├── frontend/               # Aplicación React Premium
-│   ├── src/
-│   │   ├── pages/          # AdminUsers, Events, Profile, etc.
-│   │   └── services/       # Comunicación con API
-│   └── Dockerfile
-│
-└── docker-compose.yml      # Orquestación de servicios
+└── egrex-frontend/         # Este Repositorio (Frontend)
+    ├── src/
+    ├── Dockerfile
+    └── docker-compose.yml  # Orquestador global
 ```
+
 
 ## ✅ Objetivos Cumplidos
 - [x] **Reportes:** Exportación avanzada a Excel y PDF.
