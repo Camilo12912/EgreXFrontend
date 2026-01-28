@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Button, Modal, Form, Alert, Badge, Spinner, Table, Dropdown, OverlayTrigger, Tooltip, Offcanvas } from 'react-bootstrap';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaCalendarAlt, FaMapMarkerAlt, FaPlus, FaTrash, FaChevronRight, FaUserCheck, FaUsers, FaFilePdf, FaFileExcel, FaDownload, FaCheckCircle } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -55,6 +56,7 @@ const Countdown = ({ targetDate }) => {
 };
 
 const Events = () => {
+    const navigate = useNavigate();
     const [events, setEvents] = useState([]);
     const [showModal, setShowModal] = useState(false);
     const [formData, setFormData] = useState({
@@ -382,7 +384,31 @@ const Events = () => {
                 </Container>
             </div>
 
-            <Container className="pb-5">
+            <Container className="py-5">
+                {profileNeedsUpdate && !isAdmin && (
+                    <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-4">
+                        <Alert variant="warning" className="border-0 shadow-sm rounded-4 p-4 d-flex align-items-center gap-3">
+                            <div className="bg-white rounded-circle p-2 shadow-sm">
+                                <FaPlus style={{ transform: 'rotate(45deg)', color: '#856404' }} size={20} />
+                            </div>
+                            <div>
+                                <Alert.Heading className="h5 fw-bold mb-1">¡Acción Requerida!</Alert.Heading>
+                                <p className="mb-0 small opacity-75">
+                                    Tu perfil está incompleto o requiere actualización (obligatorio cada 4 meses).
+                                    Debes completar tus datos para poder inscribirte en los próximos eventos.
+                                </p>
+                                <Button
+                                    variant="link"
+                                    className="p-0 mt-2 fw-bold text-decoration-none text-dark small"
+                                    onClick={() => navigate('/profile')}
+                                >
+                                    ACTUALIZAR MI PERFIL AHORA →
+                                </Button>
+                            </div>
+                        </Alert>
+                    </motion.div>
+                )}
+
                 <motion.div
                     variants={containerVariants}
                     initial="hidden"
@@ -527,7 +553,16 @@ const Events = () => {
                                     <div className="mt-5 d-grid">
                                         {!isAdmin && (
                                             <>
-                                                {new Date(selectedEvent.date) < new Date() && !selectedEvent.isRegistered ? (
+                                                {profileNeedsUpdate ? (
+                                                    <Button
+                                                        variant="warning"
+                                                        className="py-3 fw-bold text-dark border-0 shadow-sm"
+                                                        onClick={() => navigate('/profile')}
+                                                        style={{ background: '#ffc107' }}
+                                                    >
+                                                        ACTUALIZAR PERFIL PARA INSCRIBIRSE
+                                                    </Button>
+                                                ) : new Date(selectedEvent.date) < new Date() && !selectedEvent.isRegistered ? (
                                                     <Button variant="secondary" className="py-3" disabled>
                                                         EVENTO FINALIZADO
                                                     </Button>
