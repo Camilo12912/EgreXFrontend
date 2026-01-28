@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Button, Modal, Form, Alert, Badge, Spinner, Table, Dropdown, OverlayTrigger, Tooltip, Offcanvas } from 'react-bootstrap';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaCalendarAlt, FaMapMarkerAlt, FaPlus, FaTrash, FaChevronRight, FaUserCheck, FaUsers, FaFilePdf, FaFileExcel, FaDownload } from 'react-icons/fa';
+import { FaCalendarAlt, FaMapMarkerAlt, FaPlus, FaTrash, FaChevronRight, FaUserCheck, FaUsers, FaFilePdf, FaFileExcel, FaDownload, FaCheckCircle } from 'react-icons/fa';
 import api from '../services/api';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -378,7 +378,7 @@ const Events = () => {
                                                             <Button variant="link" className="p-0 text-muted" onClick={() => fetchParticipants(event.id)}>
                                                                 <FaUsers size={14} title="Ver inscritos" />
                                                             </Button>
-                                                            <Button variant="link" className="p-0 text-muted" onClick={() => handleDelete(event.id)}>
+                                                            <Button variant="link" className="p-0 text-muted" onClick={() => handleDeleteClick(event)}>
                                                                 <FaTrash size={12} />
                                                             </Button>
                                                         </>

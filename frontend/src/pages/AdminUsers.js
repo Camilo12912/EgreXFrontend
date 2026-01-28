@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Table, Button, Modal, Spinner, Alert, Row, Col, Card, Dropdown, OverlayTrigger, Tooltip } from 'react-bootstrap';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaUsers, FaHistory, FaUserPlus, FaFilePdf, FaFileExcel, FaTrash, FaDownload, FaFileUpload } from 'react-icons/fa';
+import { FaUsers, FaHistory, FaUserPlus, FaFilePdf, FaFileExcel, FaTrash, FaDownload, FaFileUpload, FaCheckCircle } from 'react-icons/fa';
 import api from '../services/api'; // Keep for specific history calls unless migrated too
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
