@@ -153,13 +153,18 @@ const Profile = () => {
       }
 
       await api.put('/profile', payload);
-      setMessage('¡Perfil actualizado con éxito!');
+      setMessage('¡Perfil actualizado con éxito! Redirigiendo...');
 
       // Update local storage user data if name changed
       const user = JSON.parse(localStorage.getItem('user'));
       localStorage.setItem('user', JSON.stringify({ ...user, nombre: formData.nombre }));
 
-      setTimeout(() => navigate('/events'), 2000);
+      // Temporary flag to bypass stale cache in Events page
+      localStorage.setItem('profileJustUpdated', new Date().getTime().toString());
+
+      setTimeout(() => {
+        window.location.href = '/events';
+      }, 2000);
     } catch (err) {
       setError(err.response?.data?.message || 'Error al actualizar el perfil');
     } finally {

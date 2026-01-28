@@ -91,23 +91,30 @@ const Events = () => {
     }, []);
 
     const checkProfileStatus = async () => {
+        // Check if user just updated profile to bypass stale API/cache
+        const justUpdated = localStorage.getItem('profileJustUpdated');
+        if (justUpdated) {
+            const timeDiff = new Date().getTime() - parseInt(justUpdated);
+            if (timeDiff < 300000) { // 5 minutes buffer
+                setProfileNeedsUpdate(false);
+                // We'll still fetch in background to sync, but we don't block
+            }
+        }
+
         try {
             // Add cache-buster to ensure we get fresh data after an update
             const response = await api.get(`/profile?t=${new Date().getTime()}`);
             const data = response.data;
 
             if (!data) {
-                setProfileNeedsUpdate(true);
+                if (!justUpdated) setProfileNeedsUpdate(true);
                 return;
             }
 
-            // Check only for the absolutely essential fields to avoid false positives
-            const isIncomplete =
-                !data.nombre?.toString().trim() ||
-                !data.programa_academico ||
-                !data.profesion?.toString().trim();
+            // check if key fields are missing
+            const isIncomplete = !data.nombre || !data.programa_academico || !data.profesion;
 
-            // Check 4 month rule
+            // check 4 month rule
             let isOutdated = false;
             if (data.fecha_actualizacion) {
                 const lastUpdate = new Date(data.fecha_actualizacion);
@@ -117,14 +124,24 @@ const Events = () => {
                     isOutdated = true;
                 }
             } else {
-                isOutdated = true; // No date means never updated/new
+                isOutdated = true;
             }
 
-            setProfileNeedsUpdate(isIncomplete || isOutdated);
+            // Final decision: if just updated, trust local state over potentially stale API
+            if (justUpdated && (new Date().getTime() - parseInt(justUpdated) < 300000)) {
+                setProfileNeedsUpdate(false);
+            } else {
+                setProfileNeedsUpdate(isIncomplete || isOutdated);
+            }
+
+            // Clear the flag if the API finally confirms everything is OK
+            if (!isIncomplete && !isOutdated) {
+                localStorage.removeItem('profileJustUpdated');
+            }
         } catch (err) {
             console.error('Error fetching profile status:', err);
             // If profile doesn't exist yet (404), it definitely needs update
-            if (err.response?.status === 404) {
+            if (err.response?.status === 404 && !justUpdated) {
                 setProfileNeedsUpdate(true);
             }
         }
