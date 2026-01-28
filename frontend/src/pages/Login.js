@@ -40,6 +40,7 @@ const Login = () => {
 
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(user));
+      localStorage.setItem('loginTimestamp', Date.now().toString());
 
       if (user.needs_password_change) {
         navigate('/change-password');
