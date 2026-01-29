@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Form, Button, Alert, Modal } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
-// No icons used in this component currently
+import { FaMoon, FaSun } from 'react-icons/fa';
 import { motion } from 'framer-motion';
 import logo from '../assets/logo.png';
 import api from '../services/api';
@@ -12,7 +12,13 @@ const Login = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showSupportModal, setShowSupportModal] = useState(false);
+  const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
   const navigate = useNavigate();
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
+  }, [theme]);
 
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
@@ -30,6 +36,10 @@ const Login = () => {
       }
     }
   }, [navigate]);
+
+  const toggleTheme = () => {
+    setTheme(prevTheme => prevTheme === 'light' ? 'dark' : 'light');
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -56,7 +66,15 @@ const Login = () => {
   };
 
   return (
-    <div className="min-vh-100 d-flex align-items-center justify-content-center bg-serious p-4">
+    <div className="min-vh-100 d-flex align-items-center justify-content-center bg-serious p-4 position-relative">
+      <button
+        onClick={toggleTheme}
+        className="btn btn-link p-0 border-0 text-muted transition-fast position-absolute top-0 end-0 m-4"
+        style={{ fontSize: '1.5rem', zIndex: 1000 }}
+      >
+        {theme === 'light' ? <FaMoon /> : <FaSun className="text-warning" />}
+      </button>
+
       <motion.div
         initial={{ opacity: 0, scale: 0.98 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -73,7 +91,11 @@ const Login = () => {
             <img
               src={logo}
               alt="Logo"
-              style={{ maxHeight: '60px', width: 'auto' }}
+              style={{
+                maxHeight: '60px',
+                width: 'auto',
+                filter: theme === 'dark' ? 'brightness(0) invert(1)' : 'none'
+              }}
               className="mb-4"
             />
             <h5 className="fw-bold text-serious mb-1" style={{ letterSpacing: '1px' }}>
@@ -170,10 +192,13 @@ const Login = () => {
         </motion.div>
 
         {/* Modal de Soporte */}
-        <Modal show={showSupportModal} onHide={() => setShowSupportModal(true)} centered className="minimal-modal" size="sm">
+        <Modal show={showSupportModal} onHide={() => setShowSupportModal(false)} centered className="minimal-modal" size="sm">
           <Modal.Body className="p-4 text-center">
             <div className="mb-3 text-institutional">
-              <img src={logo} alt="Logo" style={{ maxHeight: '40px' }} className="mb-2" />
+              <img src={logo} alt="Logo" style={{
+                maxHeight: '40px',
+                filter: theme === 'dark' ? 'brightness(0) invert(1)' : 'none'
+              }} className="mb-2" />
             </div>
             <h6 className="fw-bold mb-3">Soporte Técnico</h6>
             <p className="text-muted small mb-4">

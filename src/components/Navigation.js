@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Navbar, Nav, Container, Dropdown } from 'react-bootstrap';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { FaUserCircle, FaSignOutAlt, FaUser } from 'react-icons/fa';
+import { FaUserCircle, FaSignOutAlt, FaUser, FaMoon, FaSun } from 'react-icons/fa';
 
 import logo from '../assets/logo.png';
 
@@ -9,9 +9,15 @@ const Navigation = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [scrolled, setScrolled] = useState(false);
+  const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
   const token = localStorage.getItem('token');
   const userStr = localStorage.getItem('user');
   const user = userStr ? JSON.parse(userStr) : null;
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
+  }, [theme]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -32,6 +38,10 @@ const Navigation = () => {
     localStorage.removeItem('user');
     localStorage.removeItem('loginTimestamp');
     navigate('/login');
+  };
+
+  const toggleTheme = () => {
+    setTheme(prevTheme => prevTheme === 'light' ? 'dark' : 'light');
   };
 
   const getInitials = () => {
@@ -63,12 +73,22 @@ const Navigation = () => {
             style={{
               transition: 'all 0.3s ease-in-out',
               height: scrolled ? "36px" : "46px",
-              width: 'auto'
+              width: 'auto',
+              filter: theme === 'dark' ? 'brightness(0) invert(1)' : 'none'
             }}
           />
         </Navbar.Brand>
 
-        <Navbar.Toggle aria-controls="basic-navbar-nav" className="border-0 shadow-none" />
+        <div className="d-flex align-items-center gap-3 d-lg-none">
+          <button
+            onClick={toggleTheme}
+            className="btn btn-link p-0 border-0 text-muted transition-fast"
+            style={{ fontSize: '1.2rem' }}
+          >
+            {theme === 'light' ? <FaMoon /> : <FaSun className="text-warning" />}
+          </button>
+          <Navbar.Toggle aria-controls="basic-navbar-nav" className="border-0 shadow-none p-0" />
+        </div>
 
         <Navbar.Collapse id="basic-navbar-nav">
           <Nav className="ms-auto align-items-center">
@@ -99,6 +119,14 @@ const Navigation = () => {
                 Panel Admin
               </Nav.Link>
             )}
+
+            <button
+              onClick={toggleTheme}
+              className="btn btn-link p-0 border-0 text-muted transition-fast d-none d-lg-block ms-lg-3"
+              style={{ fontSize: '1.1rem' }}
+            >
+              {theme === 'light' ? <FaMoon /> : <FaSun className="text-warning" />}
+            </button>
 
             <div className="ms-lg-4 mt-3 mt-lg-0">
               <Dropdown align="end">

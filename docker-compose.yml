@@ -14,6 +14,7 @@ services:
 
   backend:
     build: ../egrex-backend
+    image: camilo12912/egrex-backend:latest
     container_name: egrex-backend
     restart: always
     environment:
@@ -32,6 +33,7 @@ services:
 
   frontend:
     build: .
+    image: camilo12912/egrex-frontend:latest
     container_name: egrex-frontend
     restart: always
     ports:
