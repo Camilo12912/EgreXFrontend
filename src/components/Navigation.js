@@ -4,6 +4,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { FaUserCircle, FaSignOutAlt, FaUser, FaMoon, FaSun } from 'react-icons/fa';
 
 import logo from '../assets/logo.png';
+import Credits from './Credits';
 
 const Navigation = () => {
   const navigate = useNavigate();
@@ -13,6 +14,9 @@ const Navigation = () => {
   const token = localStorage.getItem('token');
   const userStr = localStorage.getItem('user');
   const user = userStr ? JSON.parse(userStr) : null;
+  const [showCredits, setShowCredits] = useState(false);
+  const [logoClicks, setLogoClicks] = useState(0);
+  const lastClickRef = React.useRef(0);
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
@@ -30,8 +34,36 @@ const Navigation = () => {
     };
 
     window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+
+    const handleKeyDown = (e) => {
+      if (e.ctrlKey && e.altKey && e.key.toLowerCase() === 'c') {
+        setShowCredits(prev => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
   }, []);
+
+  const handleLogoClick = () => {
+    const now = Date.now();
+    if (now - lastClickRef.current > 2000) {
+      setLogoClicks(1);
+    } else {
+      setLogoClicks(prev => {
+        const next = prev + 1;
+        if (next >= 5) {
+          setShowCredits(true);
+          return 0;
+        }
+        return next;
+      });
+    }
+    lastClickRef.current = now;
+  };
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -53,7 +85,7 @@ const Navigation = () => {
       }
       return names[0][0].toUpperCase();
     }
-    return user.email ? user.email[0].toUpperCase() : 'U';
+    return 'U';
   };
 
   const isActive = (path) => location.pathname === path;
@@ -61,114 +93,127 @@ const Navigation = () => {
   if (!token) return null;
 
   return (
-    <Navbar
-      expand="lg"
-      className={`navbar-minimalist sticky-top transition-fast ${scrolled ? 'py-2 shadow-sm' : 'py-3'}`}
-    >
-      <Container>
-        <Navbar.Brand as={Link} to="/events" className="d-flex align-items-center">
-          <img
-            src={logo}
-            alt="Logo"
-            style={{
-              transition: 'all 0.3s ease-in-out',
-              height: scrolled ? "36px" : "46px",
-              width: 'auto',
-              filter: theme === 'dark' ? 'brightness(0) invert(1)' : 'none'
+    <>
+      <Navbar
+        expand="lg"
+        className={`navbar-minimalist sticky-top transition-fast ${scrolled ? 'py-2 shadow-sm' : 'py-3'}`}
+      >
+        <Container>
+          <Navbar.Brand
+            as={Link}
+            to="/events"
+            className="d-flex align-items-center"
+            onClick={(e) => {
+              if (location.pathname === '/events' || location.pathname === '/admin/dashboard') {
+                e.preventDefault();
+                handleLogoClick();
+              }
             }}
-          />
-        </Navbar.Brand>
-
-        <div className="d-flex align-items-center gap-3 d-lg-none">
-          <button
-            onClick={toggleTheme}
-            className="btn btn-link p-0 border-0 text-muted transition-fast"
-            style={{ fontSize: '1.2rem' }}
           >
-            {theme === 'light' ? <FaMoon /> : <FaSun className="text-warning" />}
-          </button>
-          <Navbar.Toggle aria-controls="basic-navbar-nav" className="border-0 shadow-none p-0" />
-        </div>
+            <img
+              src={logo}
+              alt="Logo"
+              style={{
+                transition: 'all 0.3s ease-in-out',
+                height: scrolled ? "36px" : "46px",
+                width: 'auto',
+                filter: theme === 'dark' ? 'brightness(0) invert(1)' : 'none',
+                cursor: 'pointer'
+              }}
+            />
+          </Navbar.Brand>
 
-        <Navbar.Collapse id="basic-navbar-nav">
-          <Nav className="ms-auto align-items-center">
-            <Nav.Link
-              as={Link}
-              to="/events"
-              className={`nav-link-pro px-3 ${isActive('/events') ? 'active' : ''}`}
-            >
-              Eventos
-            </Nav.Link>
-
-            {user && user.role !== 'admin' && (
-              <Nav.Link
-                as={Link}
-                to="/profile"
-                className={`nav-link-pro px-3 ${isActive('/profile') ? 'active' : ''}`}
-              >
-                Perfil
-              </Nav.Link>
-            )}
-
-            {user && user.role === 'admin' && (
-              <Nav.Link
-                as={Link}
-                to="/admin/dashboard"
-                className={`nav-link-pro px-3 ${isActive('/admin/dashboard') ? 'active' : ''}`}
-              >
-                Panel Admin
-              </Nav.Link>
-            )}
-
+          <div className="d-flex align-items-center gap-3 d-lg-none">
             <button
               onClick={toggleTheme}
-              className="btn btn-link p-0 border-0 text-muted transition-fast d-none d-lg-block ms-lg-3"
-              style={{ fontSize: '1.1rem' }}
+              className="btn btn-link p-0 border-0 text-muted transition-fast"
+              style={{ fontSize: '1.2rem' }}
             >
               {theme === 'light' ? <FaMoon /> : <FaSun className="text-warning" />}
             </button>
+            <Navbar.Toggle aria-controls="basic-navbar-nav" className="border-0 shadow-none p-0" />
+          </div>
 
-            <div className="ms-lg-4 mt-3 mt-lg-0">
-              <Dropdown align="end">
-                <Dropdown.Toggle variant="transparent" className="p-0 border-0 d-flex align-items-center gap-2 no-caret">
-                  <div
-                    className="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold shadow-sm transition-fast"
-                    style={{
-                      width: '38px',
-                      height: '38px',
-                      background: 'var(--institutional-red)',
-                      fontSize: '0.85rem',
-                      letterSpacing: '0.5px'
-                    }}
-                  >
-                    {getInitials()}
-                  </div>
-                </Dropdown.Toggle>
+          <Navbar.Collapse id="basic-navbar-nav">
+            <Nav className="ms-auto align-items-center">
+              <Nav.Link
+                as={Link}
+                to="/events"
+                className={`nav-link-pro px-3 ${isActive('/events') ? 'active' : ''}`}
+              >
+                Eventos
+              </Nav.Link>
 
-                <Dropdown.Menu className="border-0 shadow-lg mt-2 py-2 dropdown-menu-minimal">
-                  <div className="px-3 py-2 border-bottom mb-2 d-lg-none">
-                    <div className="fw-bold small text-serious">{user?.nombre || 'Usuario'}</div>
-                    <div className="text-muted" style={{ fontSize: '0.7rem' }}>{user?.email}</div>
-                  </div>
+              {user && user.role !== 'admin' && (
+                <Nav.Link
+                  as={Link}
+                  to="/profile"
+                  className={`nav-link-pro px-3 ${isActive('/profile') ? 'active' : ''}`}
+                >
+                  Perfil
+                </Nav.Link>
+              )}
 
-                  {user?.role !== 'admin' && (
-                    <Dropdown.Item as={Link} to="/profile" className="py-2 d-flex align-items-center gap-2 small fw-medium">
-                      <FaUser className="opacity-50" /> Mi Perfil
+              {user && user.role === 'admin' && (
+                <Nav.Link
+                  as={Link}
+                  to="/admin/dashboard"
+                  className={`nav-link-pro px-3 ${isActive('/admin/dashboard') ? 'active' : ''}`}
+                >
+                  Panel Admin
+                </Nav.Link>
+              )}
+
+              <button
+                onClick={toggleTheme}
+                className="btn btn-link p-0 border-0 text-muted transition-fast d-none d-lg-block ms-lg-3"
+                style={{ fontSize: '1.1rem' }}
+              >
+                {theme === 'light' ? <FaMoon /> : <FaSun className="text-warning" />}
+              </button>
+
+              <div className="ms-lg-4 mt-3 mt-lg-0">
+                <Dropdown align="end">
+                  <Dropdown.Toggle variant="transparent" className="p-0 border-0 d-flex align-items-center gap-2 no-caret">
+                    <div
+                      className="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold shadow-sm transition-fast"
+                      style={{
+                        width: '38px',
+                        height: '38px',
+                        background: 'var(--institutional-red)',
+                        fontSize: '0.85rem',
+                        letterSpacing: '0.5px'
+                      }}
+                    >
+                      {getInitials()}
+                    </div>
+                  </Dropdown.Toggle>
+
+                  <Dropdown.Menu className="border-0 shadow-lg mt-2 py-2 dropdown-menu-minimal">
+                    <div className="px-3 py-2 border-bottom mb-2 d-lg-none">
+                      <div className="fw-bold small text-serious">{user?.nombre || 'Usuario'}</div>
+                    </div>
+
+                    {user?.role !== 'admin' && (
+                      <Dropdown.Item as={Link} to="/profile" className="py-2 d-flex align-items-center gap-2 small fw-medium">
+                        <FaUser className="opacity-50" /> Mi Perfil
+                      </Dropdown.Item>
+                    )}
+
+                    <Dropdown.Divider />
+
+                    <Dropdown.Item onClick={handleLogout} className="py-2 d-flex align-items-center gap-2 small fw-medium text-danger">
+                      <FaSignOutAlt /> Cerrar Sesión
                     </Dropdown.Item>
-                  )}
-
-                  <Dropdown.Divider />
-
-                  <Dropdown.Item onClick={handleLogout} className="py-2 d-flex align-items-center gap-2 small fw-medium text-danger">
-                    <FaSignOutAlt /> Cerrar Sesión
-                  </Dropdown.Item>
-                </Dropdown.Menu>
-              </Dropdown>
-            </div>
-          </Nav>
-        </Navbar.Collapse>
-      </Container>
-    </Navbar>
+                  </Dropdown.Menu>
+                </Dropdown>
+              </div>
+            </Nav>
+          </Navbar.Collapse>
+        </Container>
+      </Navbar>
+      <Credits show={showCredits} onHide={() => setShowCredits(false)} />
+    </>
   );
 };
 

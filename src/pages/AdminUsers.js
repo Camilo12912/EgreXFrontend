@@ -23,7 +23,6 @@ const AdminUsers = () => {
     const [showAddModal, setShowAddModal] = useState(false);
     const [newUser, setNewUser] = useState({
         identificacion: '',
-        email: '',
         nombre: '',
         programa_academico: '',
         sede: 'Sede FESC Cúcuta'
@@ -39,11 +38,25 @@ const AdminUsers = () => {
 
     // Search Filters
     const [searchTerm, setSearchTerm] = useState('');
-    const [filterField, setFilterField] = useState('all'); // all, email, nombre, identificacion
+    const [filterField, setFilterField] = useState('all'); // all, nombre, identificacion
+    const [careerFilter, setCareerFilter] = useState('');
+
+    const programas = [
+        "Técnico Procesos Contables", "Tecnología Gestión Financiera", "Administración Financiera",
+        "Técnico Mercadotecnia", "Tecnología Gestión Negocios Internacionales", "Administración Negocios Internacionales presencial",
+        "Técnico Procesos Diseño Modas", "Tecnología Gestión Diseño Modas", "Diseño Administración Negocios de la Moda",
+        "Técnico Procesos Aduaneros", "Tecnología Comercio Internacional", "Administración Negocios internacionales",
+        "Técnico Operaciones logísticas", "Tecnología Logística Empresarial",
+        "Técnico Operaciones Turísticas", "Tecnología Servicios de bienestar Turísticos", "Administración Turística y Hotelera",
+        "Técnico Producción Grafica", "Tecnología Gestión Contenidos Gráficos Publicitarios", "Diseño Gráfico",
+        "Técnico Profesional En Soporte informático", "Tecnólogo En Desarrollo De Software", "Ingeniería De Software",
+        "Tecnología Administración Redes", "Tecnología Administración Informática",
+        "Tecnología Mercadotecnia y Cio. Internacional", "Especialización en Gestión Pública"
+    ];
 
     useEffect(() => {
-        fetchUsers();
-    }, [fetchUsers]);
+        fetchUsers({ programa_academico: careerFilter });
+    }, [fetchUsers, careerFilter]);
 
     // History is not yet migrated to Clean Arch, waiting for next steps or keeping as is for now
     const fetchUserHistory = async (userId) => {
@@ -86,17 +99,10 @@ const AdminUsers = () => {
                 return;
             }
 
-            const emailExists = users.some(u => u.email === newUser.email);
-            if (emailExists) {
-                setAddError('Este correo electrónico ya está registrado.');
-                setAdding(false);
-                return;
-            }
-
             await createUser(newUser);
             setShowAddModal(false);
-            setNewUser({ identificacion: '', email: '', nombre: '', programa_academico: '', sede: 'Sede FESC Cúcuta' });
-            fetchUsers();
+            setNewUser({ identificacion: '', nombre: '', programa_academico: '', sede: 'Sede FESC Cúcuta' });
+            fetchUsers({ programa_academico: careerFilter });
             setAdding(false);
         } catch (err) {
             console.error('Error adding user:', err);
@@ -186,10 +192,9 @@ const AdminUsers = () => {
         doc.setTextColor(100);
         doc.text(`Fecha: ${new Date().toLocaleDateString()}`, 14, 28);
 
-        const tableColumn = ["Nombre", "Email", "Cédula", "Programa", "Situación Laboral", "Empresa", "Cargo"];
-        const tableRows = users.map(user => [
+        const tableColumn = ["Nombre", "Cédula", "Programa", "Situación Laboral", "Empresa", "Cargo"];
+        const tableRows = filteredUsers.map(user => [
             user.nombre || "-",
-            user.email,
             user.identificacion || "-",
             user.programa_academico || "-",
             user.laboralmente_activo || "-",
@@ -209,9 +214,8 @@ const AdminUsers = () => {
     };
 
     const exportToExcel = () => {
-        const worksheet = XLSX.utils.json_to_sheet(users.map(user => ({
+        const worksheet = XLSX.utils.json_to_sheet(filteredUsers.map(user => ({
             "Nombre Completo": user.nombre || "-",
-            "Email Institucional": user.email,
             "Cédula": user.identificacion || "-",
             "Programa Académico": user.programa_academico || "-",
             "Sede": user.sede || "-",
@@ -240,13 +244,11 @@ const AdminUsers = () => {
         if (!searchTerm) return true;
         const lowerTerm = searchTerm.toLowerCase();
 
-        if (filterField === 'email') return user.email.toLowerCase().includes(lowerTerm);
         if (filterField === 'nombre') return (user.nombre || '').toLowerCase().includes(lowerTerm);
         if (filterField === 'identificacion') return (user.identificacion || '').toLowerCase().includes(lowerTerm);
 
         // 'all' case
         return (
-            user.email.toLowerCase().includes(lowerTerm) ||
             (user.nombre || '').toLowerCase().includes(lowerTerm) ||
             (user.identificacion || '').toLowerCase().includes(lowerTerm)
         );
@@ -354,16 +356,25 @@ const AdminUsers = () => {
                             <Col md={3}>
                                 <select
                                     className="pro-input w-100 p-2"
+                                    value={careerFilter}
+                                    onChange={(e) => setCareerFilter(e.target.value)}
+                                >
+                                    <option value="">Todas las carreras</option>
+                                    {programas.map((p, i) => <option key={i} value={p}>{p}</option>)}
+                                </select>
+                            </Col>
+                            <Col md={3}>
+                                <select
+                                    className="pro-input w-100 p-2"
                                     value={filterField}
                                     onChange={(e) => setFilterField(e.target.value)}
                                 >
                                     <option value="all">Buscar en todos...</option>
-                                    <option value="email">Por Email</option>
                                     <option value="nombre">Por Nombre</option>
                                     <option value="identificacion">Por Cédula</option>
                                 </select>
                             </Col>
-                            <Col md={9}>
+                            <Col md={6}>
                                 <input
                                     type="text"
                                     placeholder="Escriba para buscar..."
@@ -416,7 +427,7 @@ const AdminUsers = () => {
                     <Card className="pro-card border-0 overflow-hidden shadow-none">
                         <Card.Body className="p-0">
                             <Table responsive hover className="mb-0 align-middle table-borderless">
-                                <thead className="bg-light">
+                                <thead className="bg-light-pro">
                                     <tr>
                                         <th className="ps-4 py-3" style={{ width: '50px' }}>
                                             <input
@@ -426,10 +437,10 @@ const AdminUsers = () => {
                                                 onChange={handleSelectAll}
                                             />
                                         </th>
-                                        <th className="py-3 small fw-bold text-secondary uppercase tracking-wider">EMAIL</th>
-                                        <th className="py-3 small fw-bold text-secondary uppercase tracking-wider">ROL</th>
-                                        <th className="py-3 small fw-bold text-secondary uppercase tracking-wider">NOMBRE</th>
-                                        <th className="pe-4 py-3 text-end small fw-bold text-secondary uppercase tracking-wider">ACCIONES</th>
+                                        <th className="py-3 small fw-bold uppercase tracking-wider">CÉDULA</th>
+                                        <th className="py-3 small fw-bold uppercase tracking-wider">ROL</th>
+                                        <th className="py-3 small fw-bold uppercase tracking-wider">NOMBRE</th>
+                                        <th className="pe-4 py-3 text-end small fw-bold uppercase tracking-wider">ACCIONES</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -448,7 +459,7 @@ const AdminUsers = () => {
                                                     onChange={() => handleSelectUser(user.id)}
                                                 />
                                             </td>
-                                            <td className="py-3 fw-medium text-serious">{user.email}</td>
+                                            <td className="py-3 fw-medium text-serious">{user.identificacion}</td>
                                             <td className="py-3">
                                                 <span className={`small fw-bold ${user.role === 'admin' ? 'text-institutional' : 'text-muted opacity-50'}`}>
                                                     {user.role.toUpperCase()}
@@ -492,11 +503,11 @@ const AdminUsers = () => {
                             >
                                 <Modal.Body className="p-4 p-md-5">
                                     <div className="mb-5 text-center">
-                                        <div className="bg-light text-institutional p-3 rounded-circle d-inline-flex mb-3">
+                                        <div className="bg-light-pro text-institutional p-3 rounded-circle d-inline-flex mb-3">
                                             <FaUsers size={32} />
                                         </div>
                                         <h3 className="fw-bold mb-1">{selectedUser.nombre || 'Nombre no registrado'}</h3>
-                                        <p className="text-muted small mb-0">{selectedUser.email}</p>
+                                        <p className="text-muted small mb-0">Cédula: {selectedUser.identificacion}</p>
                                     </div>
 
                                     {!showHistory ? (
@@ -511,7 +522,6 @@ const AdminUsers = () => {
                                                         <div className="d-flex justify-content-between"><span className="text-muted">Cédula</span> <span>{selectedUser.identificacion || '-'}</span></div>
                                                         <div className="d-flex justify-content-between"><span className="text-muted">Celular</span> <span>{selectedUser.telefono || '-'}</span></div>
                                                         <div className="d-flex justify-content-between"><span className="text-muted">Personal</span> <span className="text-lowercase">{selectedUser.correo_personal || '-'}</span></div>
-                                                        <div className="d-flex justify-content-between"><span className="text-muted">Institucional</span> <span className="text-lowercase">{selectedUser.email || '-'}</span></div>
                                                     </div>
 
                                                     <div className="d-flex align-items-center gap-2 mb-3 mt-4">
@@ -711,16 +721,6 @@ const AdminUsers = () => {
                                 />
                             </div>
                             <div className="mb-3">
-                                <label className="small fw-bold text-muted uppercase mb-1">Correo Institucional</label>
-                                <input
-                                    type="email"
-                                    className="pro-input w-100 p-2"
-                                    required
-                                    value={newUser.email}
-                                    onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
-                                />
-                            </div>
-                            <div className="mb-3">
                                 <label className="small fw-bold text-muted uppercase mb-1">Programa Académico</label>
                                 <select
                                     className="pro-input w-100 p-2"
@@ -729,12 +729,7 @@ const AdminUsers = () => {
                                     onChange={(e) => setNewUser({ ...newUser, programa_academico: e.target.value })}
                                 >
                                     <option value="">Seleccione un programa...</option>
-                                    <option value="Ingeniería de Software">Ingeniería de Software</option>
-                                    <option value="Diseño Gráfico">Diseño Gráfico</option>
-                                    <option value="Diseño de Modas">Diseño de Modas</option>
-                                    <option value="Administración de Negocios">Administración de Negocios</option>
-                                    <option value="Gestión Turística">Gestión Turística</option>
-                                    <option value="Comercio Internacional">Comercio Internacional</option>
+                                    {programas.map((p, i) => <option key={i} value={p}>{p}</option>)}
                                 </select>
                             </div>
                             <div className="mb-4">

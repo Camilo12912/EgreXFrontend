@@ -18,6 +18,9 @@
   --bs-primary-rgb: 230, 57, 70;
   --bs-danger: var(--institutional-red);
   --bs-body-bg: var(--bg-serious);
+
+  --bg-light-pro: #f8fafc;
+  --bg-card-pro: #ffffff;
 }
 
 [data-theme='dark'] {
@@ -25,7 +28,7 @@
   --bg-serious: #0f172a;
   --text-main: #e2e8f0;
   --text-muted: #94a3b8;
-  --border-light: rgba(255, 255, 255, 0.1);
+  --border-light: rgba(255, 255, 255, 0.2);
   --card-bg: #1e293b;
   --input-bg: #1e293b;
   --nav-bg: rgba(15, 23, 42, 0.8);
@@ -33,6 +36,154 @@
   --dropdown-hover: #334155;
 
   --bs-body-bg: var(--bg-serious);
+
+  --bg-light-pro: rgba(255, 255, 255, 0.05);
+  --bg-card-pro: #1e293b;
+}
+
+/* Dark Mode Overrides for standard classes */
+[data-theme='dark'] .bg-white,
+[data-theme='dark'] .bg-light {
+  background-color: var(--card-bg) !important;
+}
+
+[data-theme='dark'] .text-dark,
+[data-theme='dark'] .text-black,
+[data-theme='dark'] .text-serious {
+  color: var(--text-main) !important;
+}
+
+[data-theme='dark'] .text-muted,
+[data-theme='dark'] .text-secondary {
+  color: var(--text-muted) !important;
+}
+
+[data-theme='dark'] .border,
+[data-theme='dark'] .border-top,
+[data-theme='dark'] .border-bottom,
+[data-theme='dark'] .border-start,
+[data-theme='dark'] .border-end {
+  border-color: var(--border-light) !important;
+}
+
+/* Global Utility Classes */
+.text-serious {
+  color: var(--primary-serious);
+}
+
+.text-main {
+  color: var(--text-main);
+}
+
+.text-muted {
+  color: var(--text-muted);
+}
+
+/* Tables in Dark Mode */
+[data-theme='dark'] .table {
+  background-color: transparent !important;
+  color: var(--text-main) !important;
+  --bs-table-bg: transparent;
+  --bs-table-hover-bg: rgba(255, 255, 255, 0.03);
+  --bs-table-color: var(--text-main);
+  --bs-table-hover-color: var(--text-main);
+}
+
+[data-theme='dark'] .table td,
+[data-theme='dark'] .table th {
+  background-color: transparent !important;
+  color: inherit !important;
+  border-color: var(--border-light) !important;
+}
+
+[data-theme='dark'] .table thead th {
+  background-color: var(--bg-light-pro) !important;
+  color: var(--text-muted) !important;
+}
+
+/* Modal in Dark Mode */
+[data-theme='dark'] .modal-content {
+  background-color: var(--card-bg);
+  color: var(--text-main);
+  border-color: var(--border-light);
+}
+
+[data-theme='dark'] .modal-header,
+[data-theme='dark'] .modal-footer {
+  border-color: var(--border-light);
+}
+
+/* Cards in Dark Mode */
+[data-theme='dark'] .card {
+  background-color: var(--card-bg);
+  border-color: var(--border-light);
+}
+
+[data-theme='dark'] .card-header {
+  background-color: rgba(255, 255, 255, 0.02) !important;
+  border-bottom-color: var(--border-light);
+}
+
+[data-theme='dark'] .text-institutional {
+  color: #ff4d5a !important;
+  /* Slightly brighter red for dark mode contrast */
+}
+
+/* Forms in Dark Mode - Aggressive Fix */
+[data-theme='dark'] .form-label,
+[data-theme='dark'] label {
+  color: var(--text-main) !important;
+  font-weight: 600 !important;
+  opacity: 1 !important;
+}
+
+[data-theme='dark'] .form-control,
+[data-theme='dark'] .form-select,
+[data-theme='dark'] .pro-input {
+  background-color: rgba(255, 255, 255, 0.03) !important;
+  color: var(--text-main) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+}
+
+[data-theme='dark'] .form-control::placeholder {
+  color: var(--text-muted) !important;
+  opacity: 0.5;
+}
+
+[data-theme='dark'] .form-control:focus,
+[data-theme='dark'] .form-select:focus,
+[data-theme='dark'] .pro-input:focus {
+  background-color: var(--input-bg) !important;
+  color: var(--text-main) !important;
+  border-color: var(--institutional-red) !important;
+  box-shadow: 0 0 0 3px rgba(230, 57, 70, 0.2) !important;
+}
+
+/* Form Checks / Radios in Dark Mode */
+[data-theme='dark'] .form-check-input {
+  background-color: var(--input-bg);
+  border-color: var(--border-light);
+}
+
+[data-theme='dark'] .form-check-input:checked {
+  background-color: var(--institutional-red);
+  border-color: var(--institutional-red);
+}
+
+[data-theme='dark'] .form-check-label {
+  color: var(--text-main) !important;
+}
+
+[data-theme='dark'] .input-group-text {
+  background-color: var(--bg-light-pro);
+  color: var(--text-main);
+  border-color: var(--border-light);
+}
+
+/* Option tags in selects */
+[data-theme='dark'] option {
+  background-color: var(--card-bg);
+  color: var(--text-main);
 }
 
 .bg-serious {
@@ -53,6 +204,14 @@ body {
   color: var(--text-main);
   -webkit-font-smoothing: antialiased;
   transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.bg-light-pro {
+  background-color: var(--bg-light-pro) !important;
+}
+
+.bg-card-pro {
+  background-color: var(--bg-card-pro) !important;
 }
 
 /* Tipografía */

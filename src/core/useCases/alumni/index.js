@@ -3,8 +3,8 @@ export class GetAlumniListUseCase {
         this.repository = repository;
     }
 
-    execute() {
-        return this.repository.getAlumniList();
+    execute(filters) {
+        return this.repository.getAlumniList(filters);
     }
 }
 

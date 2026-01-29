@@ -31,11 +31,11 @@ export const useAlumni = () => {
     const getRecentAlumniUseCase = useMemo(() => new GetRecentAlumniUseCase(repository), [repository]);
     const getDashboardMetricsUseCase = useMemo(() => new GetDashboardMetricsUseCase(repository), [repository]);
 
-    const fetchUsers = useCallback(async () => {
+    const fetchUsers = useCallback(async (filters = {}) => {
         setLoading(true);
         setError(null);
         try {
-            const data = await getAlumniListUseCase.execute();
+            const data = await getAlumniListUseCase.execute(filters);
             setUsers(data);
         } catch (err) {
             setError(err.message || 'Error fetching users');

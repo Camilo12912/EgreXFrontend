@@ -6,8 +6,8 @@ import AlumniRepository from '../../domain/alumni/AlumniRepository';
  * Infrastructure Layer.
  */
 export default class AlumniApiRepository extends AlumniRepository {
-    async getAlumniList() {
-        const response = await api.get('/admin/users');
+    async getAlumniList(filters = {}) {
+        const response = await api.get('/admin/users', { params: filters });
         return response.data;
     }
 

@@ -49,7 +49,7 @@ const Countdown = ({ targetDate }) => {
     });
 
     return (
-        <div className="my-3 p-3 bg-light rounded-3 d-inline-block border">
+        <div className="my-3 p-3 bg-light-pro rounded-3 d-inline-block border">
             {timerComponents.length ? timerComponents : <span className="fw-bold text-success">¡Es hoy!</span>}
         </div>
     );
@@ -64,7 +64,8 @@ const Events = () => {
         description: '',
         date: '',
         location: '',
-        imageUrl: ''
+        imageUrl: '',
+        formQuestions: [] // Array of { id, text, type, options }
     });
     const [error, setError] = useState('');
     const [showDetailModal, setShowDetailModal] = useState(false);
@@ -81,6 +82,8 @@ const Events = () => {
     const [eventToDelete, setEventToDelete] = useState(null);
     const [isDeleting, setIsDeleting] = useState(false);
     const [showParticipantsModal, setShowParticipantsModal] = useState(false);
+    const [formResponses, setFormResponses] = useState({});
+    const [showRegisterForm, setShowRegisterForm] = useState(false);
 
     const user = JSON.parse(localStorage.getItem('user'));
     const isAdmin = user && user.role === 'admin';
@@ -211,8 +214,24 @@ const Events = () => {
             window.scrollTo(0, 0);
             return;
         }
+
+        // If event has questions and we haven't shown the form yet
+        if (selectedEvent.form_questions && selectedEvent.form_questions.length > 0 && !showRegisterForm) {
+            setShowRegisterForm(true);
+            return;
+        }
+
+        // Validate mandatory questions
+        if (selectedEvent.form_questions && selectedEvent.form_questions.length > 0) {
+            const unanswered = selectedEvent.form_questions.filter(q => !formResponses[q.text]);
+            if (unanswered.length > 0) {
+                setError(`Por favor responde todas las preguntas: ${unanswered.map(u => u.text).join(', ')}`);
+                return;
+            }
+        }
+
         try {
-            await api.registerToEvent(selectedEvent.id);
+            await api.registerToEvent(selectedEvent.id, formResponses);
             setStatusConfig({
                 type: 'success',
                 title: '¡Inscripción Exitosa!',
@@ -220,6 +239,8 @@ const Events = () => {
             });
             setShowStatusModal(true);
             setShowDetailModal(false);
+            setShowRegisterForm(false);
+            setFormResponses({});
             fetchEvents();
         } catch (err) {
             console.error('Error registering to event:', err);
@@ -245,7 +266,25 @@ const Events = () => {
         }
     };
 
-    const exportToPDF = () => {
+    const isBase64File = (str) => {
+        if (typeof str !== 'string') return false;
+        return str.startsWith('data:') && str.includes(';base64,');
+    };
+
+    const downloadFile = (base64Data, fileName = 'archivo_egresado') => {
+        try {
+            const link = document.createElement('a');
+            link.href = base64Data;
+            link.download = fileName;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        } catch (err) {
+            console.error('Error downloading file:', err);
+        }
+    };
+
+    const exportToPDF = (includeResponses = true) => {
         if (!selectedEvent || participants.length === 0) return;
 
         const doc = new jsPDF();
@@ -253,7 +292,7 @@ const Events = () => {
         // Header
         doc.setFontSize(18);
         doc.setTextColor(230, 57, 70); // Institutional Red
-        doc.text('Lista de Inscritos', 14, 22);
+        doc.text(includeResponses ? 'Lista de Inscritos (Completa)' : 'Reporte de Asistencia', 14, 22);
 
         doc.setFontSize(14);
         doc.setTextColor(33, 37, 41);
@@ -262,42 +301,73 @@ const Events = () => {
         doc.setFontSize(10);
         doc.setTextColor(100);
         doc.text(`Fecha: ${new Date(selectedEvent.date).toLocaleDateString()}`, 14, 40);
-        doc.text(`Ubicación: ${selectedEvent.location || 'Virtual'}`, 14, 45);
-        doc.text(`Generado el: ${new Date().toLocaleString()}`, 14, 50);
+        doc.text(`Generado el: ${new Date().toLocaleString()}`, 14, 45);
 
         // Table
-        const tableColumn = ["Nombre", "Email", "Programa", "Fecha Registro"];
-        const tableRows = participants.map(p => [
-            p.nombre || 'Sin perfil',
-            p.email,
-            p.programa_academico || '-',
-            new Date(p.registered_at).toLocaleString()
-        ]);
+        const tableColumn = ["Nombre", "Email", "Programa", "Asistió"];
+        if (includeResponses && selectedEvent.form_questions?.length > 0) {
+            selectedEvent.form_questions.forEach(q => tableColumn.push(q.text));
+        }
+
+        const tableRows = participants.map(p => {
+            const row = [
+                p.nombre || 'Sin perfil',
+                p.email,
+                p.programa_academico || '-',
+                p.attended ? 'SÍ' : 'NO'
+            ];
+            if (includeResponses && selectedEvent.form_questions?.length > 0) {
+                selectedEvent.form_questions.forEach(q => {
+                    const ans = p.form_responses?.[q.text] || '-';
+                    row.push(isBase64File(ans) ? 'ARCHIVO SUBIDO' : ans);
+                });
+            }
+            return row;
+        });
 
         autoTable(doc, {
             head: [tableColumn],
             body: tableRows,
-            startY: 60,
+            startY: 55,
             theme: 'grid',
             headStyles: { fillColor: [230, 57, 70] },
-            styles: { fontSize: 8 }
+            styles: { fontSize: 7 }
         });
 
-        doc.save(`inscritos_${selectedEvent.title.replace(/\s+/g, '_').toLowerCase()}.pdf`);
+        const type = includeResponses ? 'completa' : 'asistencia';
+        doc.save(`${type}_${selectedEvent.title.replace(/\s+/g, '_').toLowerCase()}.pdf`);
     };
 
-    const exportToExcel = () => {
+    const exportToExcel = (onlyAttendance = false) => {
         if (!selectedEvent || participants.length === 0) return;
 
-        const worksheet = XLSX.utils.json_to_sheet(participants.map(p => ({
-            Nombre: p.nombre || 'Sin perfil',
-            Email: p.email,
-            Programa: p.programa_academico || '-',
-            Registro: new Date(p.registered_at).toLocaleString()
-        })));
+        const dataRows = participants.map(p => {
+            const data = {
+                Nombre: p.nombre || 'Sin perfil',
+                Email: p.email,
+                Programa: p.programa_academico || '-',
+            };
+
+            if (!onlyAttendance) {
+                data.Registro = new Date(p.registered_at).toLocaleString();
+                // Add dynamic form responses
+                if (p.form_responses) {
+                    Object.keys(p.form_responses).forEach(q => {
+                        const ans = p.form_responses[q];
+                        data[`Pregunta: ${q}`] = isBase64File(ans) ? 'ARCHIVO SUBIDO' : ans;
+                    });
+                }
+            }
+
+            data.Asistencia = p.attended ? 'SÍ' : 'NO';
+            return data;
+        });
+
+        const worksheet = XLSX.utils.json_to_sheet(dataRows);
         const workbook = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(workbook, worksheet, "Inscritos");
-        XLSX.writeFile(workbook, `inscritos_${selectedEvent.title.replace(/\s+/g, '_').toLowerCase()}.xlsx`);
+        const type = onlyAttendance ? 'asistencia' : 'completo';
+        XLSX.writeFile(workbook, `${type}_${selectedEvent.title.replace(/\s+/g, '_').toLowerCase()}.xlsx`);
     };
 
     const handleCreate = async (e) => {
@@ -306,8 +376,10 @@ const Events = () => {
             const data = new FormData();
             data.append('title', formData.title);
             data.append('description', formData.description);
-            data.append('date', formData.date);
+            data.append('date', new Date(formData.date).toISOString());
             data.append('location', formData.location);
+            data.append('formQuestions', JSON.stringify(formData.formQuestions));
+
             if (imageFile) {
                 data.append('image', imageFile);
             }
@@ -319,7 +391,7 @@ const Events = () => {
             });
 
             setShowModal(false);
-            setFormData({ title: '', description: '', date: '', location: '', imageUrl: '' });
+            setFormData({ title: '', description: '', date: '', location: '', imageUrl: '', formQuestions: [] });
             setImageFile(null);
             setImagePreview(null);
             fetchEvents();
@@ -337,6 +409,55 @@ const Events = () => {
                 setImagePreview(reader.result);
             };
             reader.readAsDataURL(file);
+        }
+    };
+
+    const addQuestion = () => {
+        setFormData({
+            ...formData,
+            formQuestions: [
+                ...formData.formQuestions,
+                { id: Date.now(), text: '', type: 'text', options: [] }
+            ]
+        });
+    };
+
+    const removeQuestion = (id) => {
+        setFormData({
+            ...formData,
+            formQuestions: formData.formQuestions.filter(q => q.id !== id)
+        });
+    };
+
+    const updateQuestion = (id, field, value) => {
+        setFormData({
+            ...formData,
+            formQuestions: formData.formQuestions.map(q =>
+                q.id === id ? { ...q, [field]: value } : q
+            )
+        });
+    };
+
+    const handleDynamicFileChange = (questionText, e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setFormResponses({ ...formResponses, [questionText]: reader.result });
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const handleMarkAttendance = async (userId, attended) => {
+        try {
+            await api.markAttendance(selectedEvent.id, userId, attended);
+            // Update local state
+            setParticipants(prev => prev.map(p =>
+                p.user_id === userId ? { ...p, attended } : p
+            ));
+        } catch (err) {
+            console.error('Error marking attendance:', err);
         }
     };
 
@@ -542,7 +663,7 @@ const Events = () => {
                                     {getImageSrc(selectedEvent) ? (
                                         <img src={getImageSrc(selectedEvent)} alt={selectedEvent.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                     ) : (
-                                        <div className="w-100 h-100 bg-light d-flex align-items-center justify-content-center">
+                                        <div className="w-100 h-100 bg-card-pro d-flex align-items-center justify-content-center">
                                             <FaCalendarAlt size={64} className="text-muted opacity-10" />
                                         </div>
                                     )}
@@ -589,9 +710,9 @@ const Events = () => {
                                                 {profileNeedsUpdate ? (
                                                     <Button
                                                         variant="warning"
-                                                        className="py-3 fw-bold text-dark border-0 shadow-sm"
+                                                        className="py-3 fw-bold border-0 shadow-sm"
                                                         onClick={() => navigate('/profile')}
-                                                        style={{ background: '#ffc107' }}
+                                                        style={{ background: '#ffc107', color: '#1e293b' }}
                                                     >
                                                         ACTUALIZAR PERFIL PARA INSCRIBIRSE
                                                     </Button>
@@ -599,25 +720,77 @@ const Events = () => {
                                                     <Button variant="secondary" className="py-3" disabled>
                                                         EVENTO FINALIZADO
                                                     </Button>
-                                                ) : (
-                                                    <Button
-                                                        className={`py-3 ${selectedEvent.isRegistered ? 'btn-outline-success' : 'btn-institutional'}`}
-                                                        onClick={handleRegister}
-                                                        disabled={selectedEvent.isRegistered}
-                                                    >
-                                                        {selectedEvent.isRegistered ? (
-                                                            <><FaUserCheck className="me-2" /> YA ESTÁS INSCRITO</>
-                                                        ) : (
-                                                            'CONFIRMAR ASISTENCIA'
-                                                        )}
+                                                ) : selectedEvent.isRegistered ? (
+                                                    <Button variant="outline-success" className="py-3" disabled>
+                                                        <FaUserCheck className="me-2" /> YA ESTÁS INSCRITO
                                                     </Button>
+                                                ) : (
+                                                    <div className="bg-light-pro p-4 rounded-4 border">
+                                                        {showRegisterForm ? (
+                                                            <div className="mb-4">
+                                                                <h5 className="fw-bold mb-3">Formulario de Inscripción</h5>
+                                                                {selectedEvent.form_questions.map((q, idx) => (
+                                                                    <Form.Group key={q.id || idx} className="mb-3">
+                                                                        <Form.Label className="small fw-bold opacity-75">{q.text}</Form.Label>
+                                                                        {q.type === 'text' ? (
+                                                                            <Form.Control
+                                                                                className="pro-input"
+                                                                                required
+                                                                                value={formResponses[q.text] || ''}
+                                                                                onChange={(e) => setFormResponses({ ...formResponses, [q.text]: e.target.value })}
+                                                                            />
+                                                                        ) : q.type === 'select' ? (
+                                                                            <Form.Select
+                                                                                className="pro-input"
+                                                                                required
+                                                                                value={formResponses[q.text] || ''}
+                                                                                onChange={(e) => setFormResponses({ ...formResponses, [q.text]: e.target.value })}
+                                                                            >
+                                                                                <option value="">Seleccione...</option>
+                                                                                {q.options.map((opt, i) => (
+                                                                                    <option key={i} value={opt}>{opt}</option>
+                                                                                ))}
+                                                                            </Form.Select>
+                                                                        ) : (
+                                                                            <Form.Control
+                                                                                type="file"
+                                                                                className="pro-input"
+                                                                                required
+                                                                                accept="image/*,.pdf,.doc,.docx"
+                                                                                onChange={(e) => handleDynamicFileChange(q.text, e)}
+                                                                            />
+                                                                        )}
+                                                                    </Form.Group>
+                                                                ))}
+                                                            </div>
+                                                        ) : (
+                                                            <div className="text-center mb-4">
+                                                                <p className="text-muted small">Haz clic en el botón para inscribirte y completar el formulario requerido.</p>
+                                                            </div>
+                                                        )}
+                                                        <Button
+                                                            className="w-100 py-3 btn-institutional"
+                                                            onClick={handleRegister}
+                                                        >
+                                                            {showRegisterForm ? 'ENVIAR INSCRIPCIÓN' : 'INICIAR INSCRIPCIÓN'}
+                                                        </Button>
+                                                        {showRegisterForm && (
+                                                            <Button
+                                                                variant="link"
+                                                                className="w-100 mt-2 text-muted small"
+                                                                onClick={() => setShowRegisterForm(false)}
+                                                            >
+                                                                CANCELAR
+                                                            </Button>
+                                                        )}
+                                                    </div>
                                                 )}
                                                 <p className="text-center text-muted small mt-3 mb-0">
                                                     {selectedEvent.isRegistered
                                                         ? 'Te esperamos en el evento.'
                                                         : new Date(selectedEvent.date) < new Date()
                                                             ? 'Este evento ya ha pasado.'
-                                                            : 'Se enviará un recordatorio a tu correo institucional.'
+                                                            : 'Se enviará un recordatorio a tu correo personal.'
                                                     }
                                                 </p>
                                             </>
@@ -653,7 +826,7 @@ const Events = () => {
                             <Row className="g-4">
                                 <Col md={12}>
                                     <Form.Group>
-                                        <Form.Label className="small fw-bold text-secondary">TÍTULO *</Form.Label>
+                                        <Form.Label className="small fw-bold">TÍTULO *</Form.Label>
                                         <Form.Control
                                             required
                                             placeholder="Ej: Cumbre de Liderazgo"
@@ -665,7 +838,7 @@ const Events = () => {
                                 </Col>
                                 <Col md={6}>
                                     <Form.Group>
-                                        <Form.Label className="small fw-bold text-secondary">FECHA *</Form.Label>
+                                        <Form.Label className="small fw-bold">FECHA *</Form.Label>
                                         <Form.Control
                                             required
                                             type="datetime-local"
@@ -677,7 +850,7 @@ const Events = () => {
                                 </Col>
                                 <Col md={6}>
                                     <Form.Group>
-                                        <Form.Label className="small fw-bold text-secondary">UBICACIÓN *</Form.Label>
+                                        <Form.Label className="small fw-bold">UBICACIÓN *</Form.Label>
                                         <Form.Control
                                             placeholder="Auditorio / Virtual"
                                             value={formData.location}
@@ -688,7 +861,7 @@ const Events = () => {
                                 </Col>
                                 <Col md={12}>
                                     <Form.Group>
-                                        <Form.Label className="small fw-bold text-secondary">IMAGEN</Form.Label>
+                                        <Form.Label className="small fw-bold">IMAGEN</Form.Label>
                                         <Form.Control
                                             type="file"
                                             accept="image/*"
@@ -704,16 +877,74 @@ const Events = () => {
                                 </Col>
                                 <Col md={12}>
                                     <Form.Group>
-                                        <Form.Label className="small fw-bold text-secondary">DESCRIPCIÓN *</Form.Label>
+                                        <Form.Label className="small fw-bold">DESCRIPCIÓN *</Form.Label>
                                         <Form.Control
                                             as="textarea"
-                                            rows={4}
+                                            rows={2}
                                             placeholder="Detalles sobre el evento..."
                                             value={formData.description}
                                             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                                             className="pro-input"
                                         />
                                     </Form.Group>
+                                </Col>
+                                <Col md={12}>
+                                    <div className="d-flex justify-content-between align-items-center mb-3">
+                                        <Form.Label className="small fw-bold mb-0">FORMULARIO DINÁMICO (PREGUNTAS)</Form.Label>
+                                        <Button
+                                            variant="outline-institutional"
+                                            size="sm"
+                                            onClick={addQuestion}
+                                            className="py-1 px-3 rounded-pill"
+                                        >
+                                            + AGREGAR PREGUNTA
+                                        </Button>
+                                    </div>
+                                    <div className="bg-light-pro p-3 rounded-4 border">
+                                        {formData.formQuestions.length === 0 ? (
+                                            <p className="text-muted small text-center mb-0 py-2">No has agregado preguntas para el formulario de inscripción.</p>
+                                        ) : (
+                                            formData.formQuestions.map((q, idx) => (
+                                                <div key={q.id} className="bg-card-pro p-3 rounded-3 shadow-sm mb-3">
+                                                    <div className="d-flex gap-2 mb-2">
+                                                        <Form.Control
+                                                            size="sm"
+                                                            placeholder="Texto de la pregunta"
+                                                            value={q.text}
+                                                            onChange={(e) => updateQuestion(q.id, 'text', e.target.value)}
+                                                            className="pro-input"
+                                                        />
+                                                        <Form.Select
+                                                            size="sm"
+                                                            style={{ width: '150px' }}
+                                                            value={q.type}
+                                                            onChange={(e) => updateQuestion(q.id, 'type', e.target.value)}
+                                                            className="pro-input"
+                                                        >
+                                                            <option value="text">Texto Libre</option>
+                                                            <option value="select">Selección</option>
+                                                            <option value="file">Archivo / Imagen</option>
+                                                        </Form.Select>
+                                                        <Button variant="link" className="text-danger p-0 px-1" onClick={() => removeQuestion(q.id)}>
+                                                            <FaTrash size={14} />
+                                                        </Button>
+                                                    </div>
+                                                    {q.type === 'select' && (
+                                                        <div>
+                                                            <Form.Label className="x-small fw-bold text-muted mb-1">OPCIONES (Separadas por coma)</Form.Label>
+                                                            <Form.Control
+                                                                size="sm"
+                                                                placeholder="Opción 1, Opción 2, ..."
+                                                                value={q.options.join(', ')}
+                                                                onChange={(e) => updateQuestion(q.id, 'options', e.target.value.split(',').map(s => s.trim()))}
+                                                                className="pro-input"
+                                                            />
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            ))
+                                        )}
+                                    </div>
                                 </Col>
                             </Row>
                             <div className="d-flex justify-content-end gap-3 mt-5">
@@ -782,11 +1013,20 @@ const Events = () => {
                                     </Dropdown.Toggle>
 
                                     <Dropdown.Menu align="end" className="border-0 shadow-sm dropdown-menu-minimal">
-                                        <Dropdown.Item onClick={exportToPDF} className="d-flex align-items-center gap-2 py-2 small">
+                                        <div className="px-3 py-2 small fw-bold text-muted uppercase">REPORTE COMPLETO</div>
+                                        <Dropdown.Item onClick={() => exportToPDF(true)} className="d-flex align-items-center gap-2 py-2 small">
                                             <FaFilePdf className="text-danger" /> <span>Exportar PDF</span>
                                         </Dropdown.Item>
-                                        <Dropdown.Item onClick={exportToExcel} className="d-flex align-items-center gap-2 py-2 small">
+                                        <Dropdown.Item onClick={() => exportToExcel(false)} className="d-flex align-items-center gap-2 py-2 small">
                                             <FaFileExcel className="text-success" /> <span>Exportar Excel</span>
+                                        </Dropdown.Item>
+                                        <Dropdown.Divider />
+                                        <div className="px-3 py-2 small fw-bold text-muted uppercase">SOLO ASISTENCIA</div>
+                                        <Dropdown.Item onClick={() => exportToExcel(true)} className="d-flex align-items-center gap-2 py-2 small">
+                                            <FaFileExcel className="text-primary" /> <span>Asistencia (Excel)</span>
+                                        </Dropdown.Item>
+                                        <Dropdown.Item onClick={() => exportToPDF(false)} className="d-flex align-items-center gap-2 py-2 small">
+                                            <FaFilePdf className="text-secondary" /> <span>Asistencia (PDF)</span>
                                         </Dropdown.Item>
                                     </Dropdown.Menu>
                                 </Dropdown>
@@ -817,10 +1057,52 @@ const Events = () => {
                                                 <Badge bg="light" className="text-muted border-0 fw-normal small px-2 py-1">
                                                     {p.programa_academico || 'Sin programa'}
                                                 </Badge>
-                                                <div className="ms-auto small text-muted italic" style={{ fontSize: '11px' }}>
-                                                    Inscrito: {new Date(p.registered_at).toLocaleDateString()}
+                                                <div className="ms-auto d-flex align-items-center gap-3">
+                                                    {/* Attendance Toggle (Visible as soon as event starts) */}
+                                                    {new Date() > new Date(selectedEvent.date) && (
+                                                        <Form.Check
+                                                            type="switch"
+                                                            id={`attendance-${p.user_id}`}
+                                                            label={<span className="x-small fw-bold">{p.attended ? 'ASISTIÓ' : 'AUSENTE'}</span>}
+                                                            checked={p.attended}
+                                                            onChange={(e) => handleMarkAttendance(p.user_id, e.target.checked)}
+                                                            className={p.attended ? 'text-success' : 'text-muted'}
+                                                        />
+                                                    )}
+                                                    <div className="small text-muted italic" style={{ fontSize: '11px' }}>
+                                                        Inscrito: {new Date(p.registered_at).toLocaleDateString()}
+                                                    </div>
                                                 </div>
                                             </div>
+                                            {p.form_responses && Object.keys(p.form_responses).length > 0 && (
+                                                <div className="mt-3 bg-light-pro p-2 rounded small">
+                                                    <div className="fw-bold mb-1 x-small opacity-50 uppercase">Respuestas del Formulario:</div>
+                                                    {Object.entries(p.form_responses).map(([q, a], i) => (
+                                                        <div key={i} className="mb-1 d-flex align-items-center justify-content-between">
+                                                            <div>
+                                                                <span className="opacity-75">{q}:</span>{' '}
+                                                                <span className="fw-medium">
+                                                                    {isBase64File(a) ? (
+                                                                        <span className="text-institutional fw-bold uppercase">Archivo Adjunto</span>
+                                                                    ) : (
+                                                                        a
+                                                                    )}
+                                                                </span>
+                                                            </div>
+                                                            {isBase64File(a) && (
+                                                                <Button
+                                                                    variant="outline-institutional"
+                                                                    size="sm"
+                                                                    className="py-0 px-2 x-small rounded-pill fw-bold"
+                                                                    onClick={() => downloadFile(a, `archivo_${p.nombre.replace(/\s+/g, '_')}_${q.replace(/\s+/g, '_')}`)}
+                                                                >
+                                                                    <FaDownload size={10} className="me-1" /> DESCARGAR
+                                                                </Button>
+                                                            )}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
                                         </motion.div>
                                     ))}
                                 </div>

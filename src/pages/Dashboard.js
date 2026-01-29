@@ -155,7 +155,7 @@ const Dashboard = () => {
               className="h-100"
             >
               <Card className="pro-card h-100 border-0">
-                <Card.Header className="bg-white border-0 py-4 px-4 d-flex align-items-center justify-content-between">
+                <Card.Header className="bg-card-pro border-0 py-4 px-4 d-flex align-items-center justify-content-between">
                   <div className="d-flex align-items-center gap-3">
                     <div className="text-institutional" style={{ background: 'rgba(230, 57, 70, 0.1)', padding: '6px', borderRadius: '6px' }}>
                       <FaChartLine size={14} />
@@ -218,7 +218,7 @@ const Dashboard = () => {
               className="h-100"
             >
               <Card className="pro-card h-100 border-0">
-                <Card.Header className="bg-white border-0 py-4 px-4">
+                <Card.Header className="bg-card-pro border-0 py-4 px-4">
                   <h5 className="mb-0 fw-bold text-serious">Accesos Directos</h5>
                 </Card.Header>
                 <Card.Body className="px-4">
@@ -268,7 +268,7 @@ const Dashboard = () => {
               >
                 <Modal.Body className="p-4 p-md-5">
                   <div className="mb-4 d-flex align-items-center gap-3">
-                    <div className="bg-light text-institutional p-2 rounded-circle">
+                    <div className="bg-light-pro text-institutional p-2 rounded-circle">
                       <FaHistory size={20} />
                     </div>
                     <h4 className="fw-bold mb-0">Historial de Cambios Recientes</h4>
@@ -294,7 +294,7 @@ const Dashboard = () => {
                           {history.length > 0 ? history.map((log) => (
                             <tr key={log.id}>
                               <td>{new Date(log.created_at).toLocaleString()}</td>
-                              <td className="fw-bold">{log.user_email}</td>
+                              <td className="fw-bold">{log.nombre || log.user_identificacion || 'Admin'}</td>
                               <td className="text-institutional">{log.field_name}</td>
                               <td className="text-muted">{log.old_value || '-'}</td>
                               <td className="fw-bold">{log.new_value}</td>
@@ -331,7 +331,7 @@ const Dashboard = () => {
                 <Modal.Body className="p-4 p-md-5">
                   <div className="mb-4 d-flex justify-content-between align-items-center">
                     <div className="d-flex align-items-center gap-3">
-                      <div className="bg-light text-institutional p-2 rounded-circle">
+                      <div className="bg-light-pro text-institutional p-2 rounded-circle">
                         <FaUsers size={20} />
                       </div>
                       <h4 className="fw-bold mb-0">Gestión de Accesos</h4>
@@ -370,7 +370,7 @@ const Dashboard = () => {
                         <thead>
                           <tr>
                             <th className="text-muted uppercase fw-bold border-0">Nombre</th>
-                            <th className="text-muted uppercase fw-bold border-0">Email</th>
+                            <th className="text-muted uppercase fw-bold border-0">Identificación</th>
                             <th className="text-muted uppercase fw-bold border-0">Programa</th>
                             <th className="text-muted uppercase fw-bold border-0">Último Acceso</th>
                           </tr>
@@ -379,7 +379,7 @@ const Dashboard = () => {
                           {recentUsers.length > 0 ? recentUsers.map((u) => (
                             <tr key={u.id}>
                               <td className="fw-bold text-serious">{u.nombre || 'Sin perfil'}</td>
-                              <td>{u.email}</td>
+                              <td>{u.identificacion}</td>
                               <td className="text-institutional">{u.programa_academico || '-'}</td>
                               <td className="text-muted">
                                 {u.last_login ? new Date(u.last_login).toLocaleString() : 'Nunca'}

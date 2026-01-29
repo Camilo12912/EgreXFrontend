@@ -17,8 +17,9 @@ api.getGlobalHistory = () => api.get('/admin/history');
 api.getUserHistory = (id) => api.get(`/admin/users/${id}/history`);
 
 // Event-related API calls
-api.registerToEvent = (id) => api.post(`/events/${id}/register`);
+api.registerToEvent = (id, formResponses) => api.post(`/events/${id}/register`, { formResponses });
 api.getEventParticipants = (id) => api.get(`/events/${id}/participants`);
+api.markAttendance = (eventId, userId, attended) => api.post(`/events/${eventId}/attendance/${userId}`, { attended });
 
 // Add a request interceptor to include the JWT token
 api.interceptors.request.use(
