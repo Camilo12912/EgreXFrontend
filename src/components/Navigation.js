@@ -5,10 +5,12 @@ import { FaUserCircle, FaSignOutAlt, FaUser, FaMoon, FaSun, FaCode } from 'react
 
 import logo from '../assets/logo.png';
 import Credits from './Credits';
+import ChangePasswordModal from './ChangePasswordModal';
 
 const Navigation = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
   const token = localStorage.getItem('token');
@@ -227,6 +229,7 @@ const Navigation = () => {
         </Container>
       </Navbar>
       <Credits show={showCredits} onHide={() => setShowCredits(false)} theme={theme} />
+      <ChangePasswordModal show={showPasswordModal} onHide={() => setShowPasswordModal(false)} />
     </>
   );
 };
