@@ -210,7 +210,7 @@ const Navigation = () => {
                       </Dropdown.Item>
                     )}
 
-                    <Dropdown.Item as={Link} to="/change-password" className="py-2 d-flex align-items-center gap-2 small fw-medium">
+                    <Dropdown.Item onClick={() => setShowPasswordModal(true)} className="py-2 d-flex align-items-center gap-2 small fw-medium pointer-cursor">
                       <FaCode className="opacity-50" /> Cambiar Contraseña
                     </Dropdown.Item>
 
