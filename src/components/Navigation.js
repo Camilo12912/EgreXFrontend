@@ -222,7 +222,7 @@ const Navigation = () => {
           </Navbar.Collapse>
         </Container>
       </Navbar>
-      <Credits show={showCredits} onHide={() => setShowCredits(false)} />
+      <Credits show={showCredits} onHide={() => setShowCredits(false)} theme={theme} />
     </>
   );
 };
