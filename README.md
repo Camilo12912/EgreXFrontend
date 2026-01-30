@@ -1,59 +1,88 @@
-# Sistema de Gestión de Egresados - EgreX 🎓
+# 🎨 EgreX Frontend - Interfaz Premium de Gestión 🎓
 
-El **Sistema de Gestión de Egresados (EgreX)** es una plataforma integral diseñada para la administración estratégica de la comunidad de graduados. Permite el seguimiento detallado de la trayectoria laboral, la gestión de eventos institucionales y la generación de reportes avanzados para la toma de decisiones.
+El **Frontend de EgreX** es una aplicación moderna y elegante construida con **React**, diseñada para ofrecer una experiencia de usuario fluida y profesional. Utiliza animaciones avanzadas y un diseño basado en los colores institucionales para transmitir confianza y eficiencia.
 
-## 🚀 Características Principales
+---
 
-- **Gestión Autónoma de Base de Datos:** El sistema se inicializa solo. No requiere scripts manuales; el backend asegura la estructura al arrancar.
-- **Reportes Avanzados:** Exportación completa de datos de egresados a Excel (20+ dimensiones) y PDF.
-- **Seguimiento Laboral:** Ficha técnica expandida con información de empresa, sector, rango salarial y méritos.
-- **Gestión de Eventos:** Registro y control de asistencia con descarga de participantes.
-- **Diseño Premium:** Interfaz minimalista, profesional y responsiva basada en los colores institucionales.
+## 🛠️ Stack Tecnológico
 
-## 🛠️ Arquitectura y Tecnologías
+![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
+![Bootstrap](https://img.shields.io/badge/Bootstrap-563D7C?style=for-the-badge&logo=bootstrap&logoColor=white)
+![Framer Motion](https://img.shields.io/badge/Framer_Motion-0055FF?style=for-the-badge&logo=framer&logoColor=white)
+![React Icons](https://img.shields.io/badge/React_Icons-EB4D4B?style=for-the-badge&logo=react-icons&logoColor=white)
+![Axios](https://img.shields.io/badge/Axios-5A29E4?style=for-the-badge&logo=axios&logoColor=white)
 
-- **Frontend:** React.js con Framer Motion para animaciones y React Bootstrap para el diseño.
-- **Backend:** Node.js / Express con arquitectura modular y autónoma.
-- **Base de Datos:** PostgreSQL (Contenerizado o Cloud SQL).
-- **Contenerización:** Docker & Docker Compose para despliegue instantáneo.
+---
 
-## 📦 Despliegue Rápido (Docker)
+## ✨ Características Principales
 
-Para iniciar todo el sistema (Frontend, Backend y Base de Datos) desde esta carpeta:
+- **💎 Diseño Premium:** Interfaz minimalista con micro-animaciones dinámicas gracias a Framer Motion.
+- **🌗 Soporte de Temas:** Implementación de modo claro y oscuro para comodidad del usuario.
+- **📊 Visualización de Datos:** Tablas interactivas con filtrado, búsqueda y acciones masivas.
+- **📥 Exportación Inteligente:** Descarga de reportes detallados en formatos Excel y PDF con un solo clic.
+- **📱 Responsividad Total:** Adaptado para una visualización perfecta en dispositivos móviles, tablets y escritorio.
 
-1. **Asegúrate de que la carpeta `egrex-backend` esté en el mismo nivel que esta carpeta en tu escritorio.**
-2. **Ejecutar el comando de arranque:**
+---
+
+## 🏗️ Estructura del Aplicativo
+
+```text
+src/
+├── components/     # Componentes reutilizables (Botones, Modales, Navs).
+├── core/           # Casos de uso y lógica de dominio.
+├── hooks/          # Hooks personalizados de React.
+├── pages/          # Páginas principales (Login, Dashboard, Eventos, Perfil).
+├── services/       # Comunicación con la API del Backend.
+├── assets/         # Imágenes, logos y recursos estáticos.
+└── App.js          # Configuración de rutas y proveedores.
+```
+
+---
+
+## 🚦 Guía de Desarrollo Local
+
+### Requisitos Previos
+- Node.js (v18+)
+
+### Instalación
+1. **Clonar y entrar:**
+   ```bash
+   cd egrex-frontend
+   ```
+2. **Instalar dependencias:**
+   ```bash
+   npm install
+   ```
+3. **Configuración de la API:**
+   El frontend busca por defecto la API en `http://localhost:8080/api`. Si necesitas cambiarlo, asegúrate de configurar las variables de entorno correspondientes.
+
+4. **Arrancar:**
+   ```bash
+   npm start
+   ```
+
+---
+
+## 🐳 Despliegue con Docker
+
+Para levantar el ecosistema completo desde este repositorio:
+
+1. Asegúrate de tener el repositorio del backend en el mismo nivel de carpeta.
+2. Ejecuta desde la carpeta del frontend:
    ```bash
    docker compose up --build -d
    ```
-3. **Acceder al sistema:**
-   - **Frontend:** `http://localhost`
-   - **Backend API:** `http://localhost:8080/api`
 
-### 🔑 Credenciales por Defecto
-El sistema crea automáticamente un administrador inicial:
-- **Usuario:** `admin`
-- **Contraseña:** `admin`
-
-## 📁 Estructura del Proyecto (Actualizado)
-
-```
-Escritorio/
-├── egrex-backend/          # Repositorio del Backend
-│   ├── src/
-│   └── Dockerfile
-└── egrex-frontend/         # Este Repositorio (Frontend)
-    ├── src/
-    ├── Dockerfile
-    └── docker-compose.yml  # Orquestador global
-```
-
-
-## ✅ Objetivos Cumplidos
-- [x] **Reportes:** Exportación avanzada a Excel y PDF.
-- [x] **Seguridad:** Autenticación JWT y roles protegidos.
-- [x] **Autonomía:** DB autogestionada por el backend.
-- [x] **UX:** Diseño minimalista con iconos y tooltips.
+> [!IMPORTANT]
+> El sistema creará un usuario administrador por defecto:
+> - **Usuario:** `admin`
+> - **Contraseña:** `admin`
 
 ---
-Institución de Educación Superior FESC - 2026
+
+## 🤝 Créditos
+
+Desarrollado para la **Institución de Educación Superior FESC (2026)**.
+
+---
+⚡ *EgreX Frontend - Experiencia visual de alta gama para egresados.*
