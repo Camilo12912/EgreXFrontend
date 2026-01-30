@@ -32,8 +32,8 @@ const Credits = ({ show, onHide }) => {
                         alignItems: 'center',
                         justifyContent: 'center',
                         zIndex: 200000,
-                        background: 'rgba(15, 23, 42, 0.95)',
-                        backdropFilter: 'blur(12px)',
+                        background: 'rgba(15, 23, 42, 0.9)', // Very Dark Slate
+                        backdropFilter: 'blur(8px)',
                         padding: '20px'
                     }}
                     onClick={onHide}
@@ -46,103 +46,71 @@ const Credits = ({ show, onHide }) => {
                         className="credits-card"
                         style={{
                             width: '100%',
-                            maxWidth: '360px',
-                            background: 'var(--card-bg, #ffffff)',
-                            borderRadius: '28px',
+                            maxWidth: '340px',
+                            background: '#1E293B', // Slate 800
+                            borderRadius: '24px',
                             overflow: 'hidden',
-                            boxShadow: '0 30px 60px -12px rgba(0, 0, 0, 0.6)',
-                            border: '1px solid rgba(255, 255, 255, 0.1)',
-                            position: 'relative'
+                            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.7)',
+                            border: '1px solid rgba(255, 255, 255, 0.08)',
+                            color: '#F8FAFC',
+                            fontFamily: 'system-ui, -apple-system, sans-serif'
                         }}
                         onClick={(e) => e.stopPropagation()}
                     >
-                        {/* Header Image/Pattern */}
-                        <div style={{ height: '80px', background: 'var(--institutional-red)', position: 'relative', overflow: 'hidden' }}>
-                            <div style={{ position: 'absolute', top: '-10px', right: '-10px', opacity: 0.1 }}>
-                                <FaCode size={100} color="white" />
+                        {/* Header */}
+                        <div style={{ padding: '24px', borderBottom: '1px solid rgba(255,255,255,0.05)', textAlign: 'center' }}>
+                            <div className="d-flex justify-content-center mb-2">
+                                <FaCode size={24} className="text-institutional" />
                             </div>
+                            <h6 className="fw-bold mb-1 tracking-wider" style={{ letterSpacing: '0.15em', fontSize: '0.8rem' }}>EGREX ENGINEERING</h6>
+                            <div className="text-muted x-small opacity-75">v1.5 • 2026</div>
                         </div>
 
-                        {/* Avatar / Icon Overlap */}
-                        <div style={{
-                            width: '72px',
-                            height: '72px',
-                            background: 'white',
-                            borderRadius: '20px',
-                            position: 'absolute',
-                            top: '44px',
-                            left: '50%',
-                            marginLeft: '-36px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            boxShadow: '0 8px 20px rgba(0,0,0,0.1)',
-                            zIndex: 2
-                        }}>
-                            <FaCode size={32} className="text-institutional" />
-                        </div>
-
-                        <div style={{ padding: '54px 32px 32px 32px' }}>
-                            <div className="text-center mb-4">
-                                <h4 className="fw-bold text-serious mb-1">EgreX Engineering</h4>
-                                <div className="text-muted small uppercase tracking-widest fw-bold">Desarrollo & Diseño</div>
-                            </div>
-
-                            <div className="d-flex flex-column gap-3 mb-5">
+                        {/* Team */}
+                        <div style={{ padding: '24px' }}>
+                            <div className="d-flex flex-column gap-3">
                                 {/* Camilo */}
-                                <div className="d-flex align-items-center gap-3 p-3 rounded-4" style={{ background: 'var(--bg-light-pro)', border: '1px solid var(--border-light)' }}>
-                                    <div className="bg-institutional text-white rounded-circle d-flex align-items-center justify-content-center" style={{ width: '40px', height: '40px', fontWeight: 'bold' }}>
-                                        <FaLaptopCode size={18} />
+                                <div className="d-flex align-items-center gap-3">
+                                    <div className="d-flex align-items-center justify-content-center rounded-circle"
+                                        style={{ width: '36px', height: '36px', background: 'rgba(220, 38, 38, 0.1)', color: '#EF4444' }}>
+                                        <FaLaptopCode size={16} />
                                     </div>
                                     <div className="flex-grow-1">
-                                        <div className="fw-bold text-serious small mb-0">Camilo Ortega</div>
-                                        <div className="text-muted x-small">Core Systems & Frontend</div>
-                                        <div className="text-institutional x-small fw-bold mt-1">keinercamilo129@gmail.com</div>
+                                        <div className="fw-bold" style={{ fontSize: '0.9rem' }}>Camilo Ortega</div>
+                                        <div className="text-muted x-small">Lead Developer</div>
                                     </div>
-                                    <FaCheckCircle className="text-success" size={14} />
                                 </div>
 
                                 {/* Anggelo */}
-                                <div className="d-flex align-items-center gap-3 p-3 rounded-4" style={{ background: 'var(--bg-light-pro)', border: '1px solid var(--border-light)' }}>
-                                    <div className="bg-dark text-white rounded-circle d-flex align-items-center justify-content-center" style={{ width: '40px', height: '40px', fontWeight: 'bold' }}>
-                                        <FaFigma size={18} />
+                                <div className="d-flex align-items-center gap-3">
+                                    <div className="d-flex align-items-center justify-content-center rounded-circle"
+                                        style={{ width: '36px', height: '36px', background: 'rgba(255, 255, 255, 0.1)', color: '#F8FAFC' }}>
+                                        <FaFigma size={16} />
                                     </div>
                                     <div className="flex-grow-1">
-                                        <div className="fw-bold text-serious small mb-0">Anggelo Anteliz</div>
-                                        <div className="text-muted x-small">Product Design & UX</div>
+                                        <div className="fw-bold" style={{ fontSize: '0.9rem' }}>Anggelo Anteliz</div>
+                                        <div className="text-muted x-small">Product Designer</div>
                                     </div>
-                                    <FaCheckCircle className="text-success" size={14} />
                                 </div>
                             </div>
+                        </div>
 
-                            <div className="text-center mb-4">
-                                <div className="small text-muted mb-3 italic">"Construimos puentes entre los graduados y la FESC."</div>
-                                <button
-                                    className="btn btn-institutional w-100 py-3 rounded-pill fw-bold"
-                                    onClick={onHide}
-                                    style={{ fontSize: '0.9rem' }}
-                                >
-                                    CERRAR
-                                </button>
+                        {/* Footer & Shortcut */}
+                        <div style={{ padding: '20px 24px', background: 'rgba(0,0,0,0.2)' }}>
+                            <div className="d-flex align-items-center justify-content-center gap-2 mb-3">
+                                <span className="badge bg-white bg-opacity-10 text-white fw-mono d-flex align-items-center gap-2 px-3 py-2">
+                                    <span style={{ fontSize: '0.9rem' }}>⌨️</span>
+                                    <span style={{ fontSize: '0.75rem', letterSpacing: '1px' }}>CTRL + ALT + C</span>
+                                </span>
                             </div>
 
-                            <div className="text-center mt-4">
-                                <div className="d-flex align-items-center justify-content-center gap-2 mb-3 text-muted small opacity-50">
-                                    <span>Version 1.5</span>
-                                    <span>•</span>
-                                    <FaHeart className="text-institutional" />
-                                    <span>•</span>
-                                    <span>2026</span>
-                                </div>
-
-                                <motion.div
-                                    className="d-inline-flex align-items-center gap-2 px-4 py-2 rounded-pill bg-serious text-white shadow-sm"
-                                    whileHover={{ scale: 1.05 }}
-                                >
-                                    <span className="opacity-75" style={{ fontSize: '0.8rem' }}>⌨️</span>
-                                    <span className="x-small fw-bold tracking-widest uppercase" style={{ fontSize: '0.7rem' }}>Ctrl + Alt + C</span>
-                                </motion.div>
-                            </div>
+                            <button
+                                onClick={onHide}
+                                className="btn btn-sm w-100 fw-bold text-white py-2"
+                                style={{ background: '#EF4444', border: 'none', borderRadius: '12px', fontSize: '0.85rem' }}
+                            >
+                                CERRAR CRÉDITOS
+                            </button>
                         </div>
                     </motion.div>
                 </motion.div>
