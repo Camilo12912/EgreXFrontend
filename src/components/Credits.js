@@ -126,12 +126,22 @@ const Credits = ({ show, onHide }) => {
                                 </button>
                             </div>
 
-                            <div className="text-center x-small text-muted opacity-50 d-flex align-items-center justify-content-center gap-2">
-                                <span>Version 1.5</span>
-                                <span>•</span>
-                                <FaHeart className="text-institutional" />
-                                <span>•</span>
-                                <span>2026</span>
+                            <div className="text-center mt-4">
+                                <div className="d-flex align-items-center justify-content-center gap-2 mb-3 text-muted small opacity-50">
+                                    <span>Version 1.5</span>
+                                    <span>•</span>
+                                    <FaHeart className="text-institutional" />
+                                    <span>•</span>
+                                    <span>2026</span>
+                                </div>
+
+                                <motion.div
+                                    className="d-inline-flex align-items-center gap-2 px-4 py-2 rounded-pill bg-serious text-white shadow-sm"
+                                    whileHover={{ scale: 1.05 }}
+                                >
+                                    <span className="opacity-75" style={{ fontSize: '0.8rem' }}>⌨️</span>
+                                    <span className="x-small fw-bold tracking-widest uppercase" style={{ fontSize: '0.7rem' }}>Ctrl + Alt + C</span>
+                                </motion.div>
                             </div>
                         </div>
                     </motion.div>

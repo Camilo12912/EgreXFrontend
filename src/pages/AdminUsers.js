@@ -263,7 +263,24 @@ const AdminUsers = () => {
     }
 
     return (
-        <div className="bg-serious min-vh-100 py-5">
+        <div className="bg-serious min-vh-100 py-5 position-relative">
+            {/* Upload Loading Overlay */}
+            <AnimatePresence>
+                {uploading && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="position-fixed top-0 start-0 w-100 h-100 d-flex flex-column align-items-center justify-content-center"
+                        style={{ background: 'rgba(255,255,255,0.9)', zIndex: 9999, backdropFilter: 'blur(5px)' }}
+                    >
+                        <Spinner animation="border" variant="danger" style={{ width: '3rem', height: '3rem' }} />
+                        <h5 className="mt-3 fw-bold text-institutional">Procesando Base de Datos...</h5>
+                        <p className="text-muted small">Esto puede tomar unos momentos, por favor espere.</p>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
             <Container>
                 <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-end mb-5 gap-4">
                     <motion.div
@@ -521,7 +538,7 @@ const AdminUsers = () => {
                                                     <div className="small text-serious d-grid gap-2 ps-2 border-start ms-1">
                                                         <div className="d-flex justify-content-between"><span className="text-muted">Cédula</span> <span>{selectedUser.identificacion || '-'}</span></div>
                                                         <div className="d-flex justify-content-between"><span className="text-muted">Celular</span> <span>{selectedUser.telefono || '-'}</span></div>
-                                                        <div className="d-flex justify-content-between"><span className="text-muted">Personal</span> <span className="text-lowercase">{selectedUser.correo_personal || '-'}</span></div>
+                                                        <div className="d-flex justify-content-between"><span className="text-muted">Correo personal</span> <span className="text-lowercase">{selectedUser.correo_personal || '-'}</span></div>
                                                     </div>
 
                                                     <div className="d-flex align-items-center gap-2 mb-3 mt-4">
@@ -585,6 +602,45 @@ const AdminUsers = () => {
                                                         </div>
                                                     </div>
                                                 </Col>
+
+                                                <Col md={12}>
+                                                    <div className="d-flex align-items-center gap-2 mb-3 mt-2">
+                                                        <div style={{ width: '3px', height: '14px', background: 'var(--institutional-red)' }} className="rounded"></div>
+                                                        <h6 className="fw-bold mb-0 small uppercase">Estudios Adicionales</h6>
+                                                    </div>
+                                                    <div className="small text-serious ps-2 border-start ms-1">
+                                                        {(() => {
+                                                            let studies = [];
+                                                            try {
+                                                                const raw = selectedUser.estudios_adicionales;
+                                                                if (raw) {
+                                                                    if (Array.isArray(raw)) {
+                                                                        studies = raw;
+                                                                    } else if (typeof raw === 'string') {
+                                                                        const parsed = JSON.parse(raw);
+                                                                        studies = Array.isArray(parsed) ? parsed : [parsed];
+                                                                    } else if (typeof raw === 'object') {
+                                                                        studies = [raw];
+                                                                    }
+                                                                }
+                                                            } catch (e) {
+                                                                console.error("Error parsing studies", e);
+                                                            }
+
+                                                            if (studies.length > 0) {
+                                                                return studies.map((study, idx) => (
+                                                                    <div key={idx} className="mb-3 bg-light p-3 rounded-3 border">
+                                                                        <div className="fw-bold text-institutional">{study.programa || 'Programa sin nombre'}</div>
+                                                                        <div className="text-muted small">{study.institucion || (study.es_fesc ? 'FESC' : 'Otra Institución')}</div>
+                                                                        {study.fecha && <div className="text-muted x-small mt-1">{study.fecha}</div>}
+                                                                    </div>
+                                                                ));
+                                                            } else {
+                                                                return <p className="text-muted italic">No hay estudios adicionales registrados.</p>;
+                                                            }
+                                                        })()}
+                                                    </div>
+                                                </Col>
                                             </Row>
 
                                             <div className="mt-5 pt-4 border-top d-flex justify-content-between align-items-center">
@@ -627,14 +683,46 @@ const AdminUsers = () => {
                                                             </tr>
                                                         </thead>
                                                         <tbody>
-                                                            {userHistory.length > 0 ? userHistory.map((log) => (
-                                                                <tr key={log.id}>
-                                                                    <td>{new Date(log.created_at).toLocaleString()}</td>
-                                                                    <td className="text-institutional">{log.field_name}</td>
-                                                                    <td className="text-muted">{log.old_value || '-'}</td>
-                                                                    <td className="fw-bold">{log.new_value}</td>
-                                                                </tr>
-                                                            )) : (
+                                                            {userHistory.length > 0 ? userHistory.map((log) => {
+                                                                const formatFieldName = (field) => {
+                                                                    const map = {
+                                                                        'nombre': 'Nombre',
+                                                                        'telefono': 'Teléfono',
+                                                                        'correo_personal': 'Correo',
+                                                                        'direccion_domicilio': 'Dirección',
+                                                                        'barrio': 'Barrio',
+                                                                        'ciudad': 'Ciudad',
+                                                                        'cargo_actual': 'Cargo',
+                                                                        'nombre_empresa': 'Empresa',
+                                                                        'sector_economico': 'Sector',
+                                                                        'rango_salarial': 'Salario',
+                                                                        'estudios_adicionales': 'Estudios',
+                                                                        'profesion': 'Profesión',
+                                                                        'programa_academico': 'Programa',
+                                                                        'fecha_actualizacion': 'Fecha Act.',
+                                                                        'laboralmente_activo': 'Laboral',
+                                                                        'ejerce_perfil_profesional': 'Ejerce',
+                                                                        'reconocimientos': 'Méritos'
+                                                                    };
+                                                                    return map[field] || field.replace(/_/g, ' ');
+                                                                };
+
+                                                                const formatValue = (val, field) => {
+                                                                    if (!val) return '-';
+                                                                    if (field === 'estudios_adicionales') return 'Lista Actualizada';
+                                                                    if (field.includes('fecha')) return new Date(val).toLocaleDateString();
+                                                                    return val;
+                                                                };
+
+                                                                return (
+                                                                    <tr key={log.id}>
+                                                                        <td>{new Date(log.created_at).toLocaleString()}</td>
+                                                                        <td className="text-institutional fw-bold">{formatFieldName(log.field_name)}</td>
+                                                                        <td className="text-muted small text-truncate" style={{ maxWidth: '120px' }} title={log.old_value}>{formatValue(log.old_value, log.field_name)}</td>
+                                                                        <td className="fw-bold small text-truncate" style={{ maxWidth: '120px' }} title={log.new_value}>{formatValue(log.new_value, log.field_name)}</td>
+                                                                    </tr>
+                                                                );
+                                                            }) : (
                                                                 <tr>
                                                                     <td colSpan="4" className="text-center py-4 text-muted">No hay cambios registrados</td>
                                                                 </tr>
@@ -780,7 +868,7 @@ const AdminUsers = () => {
                     </Modal.Body>
                 </Modal>
             </Container>
-        </div>
+        </div >
     );
 };
 

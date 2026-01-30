@@ -23,13 +23,21 @@ const Navigation = () => {
     localStorage.setItem('theme', theme);
   }, [theme]);
 
+  // Optimized Scroll Handler with Debounce/Hysteresis
   useEffect(() => {
+    let ticking = false;
     const handleScroll = () => {
-      const threshold = 50;
-      if (window.scrollY > threshold) {
-        setScrolled(true);
-      } else {
-        setScrolled(false);
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const currentScroll = window.scrollY;
+          if (currentScroll > 60) {
+            setScrolled(true);
+          } else if (currentScroll < 40) {
+            setScrolled(false);
+          }
+          ticking = false;
+        });
+        ticking = true;
       }
     };
 
@@ -96,7 +104,8 @@ const Navigation = () => {
     <>
       <Navbar
         expand="lg"
-        className={`navbar-minimalist sticky-top transition-fast ${scrolled ? 'py-2 shadow-sm' : 'py-3'}`}
+        className={`navbar-minimalist sticky-top transition-fast py-3 ${scrolled ? 'shadow-sm bg-glass' : ''}`}
+        style={{ minHeight: '80px', transition: 'all 0.3s ease' }}
       >
         <Container>
           <Navbar.Brand
@@ -114,11 +123,12 @@ const Navigation = () => {
               src={logo}
               alt="Logo"
               style={{
-                transition: 'all 0.3s ease-in-out',
-                height: scrolled ? "36px" : "46px",
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                height: scrolled ? "40px" : "48px",
                 width: 'auto',
                 filter: theme === 'dark' ? 'brightness(0) invert(1)' : 'none',
-                cursor: 'pointer'
+                cursor: 'pointer',
+                display: 'block'
               }}
             />
           </Navbar.Brand>

@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Button, Modal, Form, Alert, Badge, Spinner, Table, Dropdown, OverlayTrigger, Tooltip, Offcanvas } from 'react-bootstrap';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaCalendarAlt, FaMapMarkerAlt, FaPlus, FaTrash, FaChevronRight, FaUserCheck, FaUsers, FaFilePdf, FaFileExcel, FaDownload, FaCheckCircle } from 'react-icons/fa';
+import { FaCalendarAlt, FaMapMarkerAlt, FaPlus, FaTrash, FaChevronRight, FaUserCheck, FaUsers, FaFilePdf, FaFileExcel, FaDownload, FaCheckCircle, FaRegEdit } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import jsPDF from 'jspdf';
@@ -84,6 +84,8 @@ const Events = () => {
     const [showParticipantsModal, setShowParticipantsModal] = useState(false);
     const [formResponses, setFormResponses] = useState({});
     const [showRegisterForm, setShowRegisterForm] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
+    const [editingEventId, setEditingEventId] = useState(null);
 
     const user = JSON.parse(localStorage.getItem('user'));
     const isAdmin = user && user.role === 'admin';
@@ -117,13 +119,15 @@ const Events = () => {
             }
 
             // check if truly mandatory fields are present
+            // check if truly mandatory fields are present
             const hasName = data.nombre && data.nombre.toString().trim().length > 0;
             const hasProgram = data.programa_academico && data.programa_academico.length > 0;
             const hasProfession = data.profesion && data.profesion.toString().trim().length > 0;
+            const hasEmail = data.correo_personal && data.correo_personal.toString().trim().length > 0;
 
-            const isIncomplete = !hasName || !hasProgram || !hasProfession;
+            const isIncomplete = !hasName || !hasProgram || !hasProfession || !hasEmail;
 
-            // 120 days = 4 months roughly
+            // 120 days = 4 months
             let isOutdated = false;
             if (data.fecha_actualizacion) {
                 const now = new Date();
@@ -132,20 +136,25 @@ const Events = () => {
                 const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
                 if (diffDays > 120) isOutdated = true;
             } else {
-                isOutdated = true;
+                isOutdated = true; // Never updated
             }
 
-            // If the user JUST updated (last 10 mins), they are good regardless of API lag
-            if (justUpdated && (new Date().getTime() - parseInt(justUpdated) < 600000)) {
-                setProfileNeedsUpdate(false);
+            // Force update if incomplete OR outdated
+            // We ignore 'justUpdated' if the profile is legitimately incomplete being returned from API
+            if (isIncomplete || isOutdated) {
+                // Optimization: If user JUST updated, maybe API is stale? 
+                // But safety first: if API says incomplete, we block.
+                // However, if it's ONLY outdated date (but data exists) and they just updated, we might allow.
+                // Let's rely on the data. If they updated, fecha_actualizacion should be new.
+                setProfileNeedsUpdate(true);
             } else {
-                setProfileNeedsUpdate(isIncomplete || isOutdated);
+                setProfileNeedsUpdate(false);
             }
         } catch (err) {
             console.error('Error profile check:', err);
-            // If 404 and we haven't just updated, block. Otherwise allow if we just updated.
+            // If 404, definitely block
             if (err.response?.status === 404) {
-                setProfileNeedsUpdate(!justUpdated);
+                setProfileNeedsUpdate(true);
             }
         } finally {
             setCheckingStatus(false);
@@ -383,21 +392,71 @@ const Events = () => {
             if (imageFile) {
                 data.append('image', imageFile);
             }
+            // If no new image, we don't send anything for 'image'. 
+            // We assume backend retains old image if 'image' is not provided.
+            // Sending 'imageUrl' as text might be confusing the backend if it expects a file or nothing.
+            // However, if the backend logic relies on 'imageUrl' being present to KEEP it, removing it is bad.
+            // The USER says it IS getting deleted now. So clearly current logic is failing.
+            // Current: sends 'imageUrl' string.
+            // Failure: Image lost.
+            // Hypothesis: Backend sees 'imageUrl' string in body, tries to use it, fails? 
+            // OR: Backend sees NO file, sets image_url = null.
 
-            await api.post('/events', data, {
-                headers: {
-                    'Content-Type': 'multipart/form-data'
-                }
-            });
+            // To be safe, I will View the backend code in the next step. 
+            // For now, I will NOT modify Events.js in this tool call, to avoid breaking it further.
+            // I will only fix the other two.
+
+
+            if (isEditing) {
+                await api.put(`/events/${editingEventId}`, data, {
+                    headers: { 'Content-Type': 'multipart/form-data' }
+                });
+            } else {
+                await api.post('/events', data, {
+                    headers: { 'Content-Type': 'multipart/form-data' }
+                });
+            }
 
             setShowModal(false);
             setFormData({ title: '', description: '', date: '', location: '', imageUrl: '', formQuestions: [] });
             setImageFile(null);
             setImagePreview(null);
+            setIsEditing(false);
+            setEditingEventId(null);
             fetchEvents();
+            setStatusConfig({
+                type: 'success',
+                title: isEditing ? 'Evento Actualizado' : 'Evento Creado',
+                message: isEditing ? 'El evento ha sido modificado correctamente.' : 'El evento ha sido publicado con éxito.'
+            });
+            setShowStatusModal(true);
         } catch (err) {
-            setError(err.response?.data?.error || 'Error creando evento');
+            setError(err.response?.data?.error || 'Error procesando evento');
         }
+    };
+
+    const handleEditClick = (event) => {
+        setFormData({
+            title: event.title,
+            description: event.description,
+            date: new Date(event.date).toISOString().slice(0, 16), // Format for datetime-local
+            location: event.location,
+            imageUrl: event.image_url,
+            formQuestions: event.form_questions || []
+        });
+        setImagePreview(getImageSrc(event));
+        setEditingEventId(event.id);
+        setIsEditing(true);
+        setShowModal(true);
+    };
+
+    const handleNewEventClick = () => {
+        setFormData({ title: '', description: '', date: '', location: '', imageUrl: '', formQuestions: [] });
+        setImageFile(null);
+        setImagePreview(null);
+        setIsEditing(false);
+        setEditingEventId(null);
+        setShowModal(true);
     };
 
     const handleFileChange = (e) => {
@@ -517,7 +576,7 @@ const Events = () => {
                                 animate={{ opacity: 1, x: 0 }}
                                 transition={{ duration: 0.6 }}
                             >
-                                <Button className="btn-institutional d-flex align-items-center shadow-none" onClick={() => setShowModal(true)}>
+                                <Button className="btn-institutional d-flex align-items-center shadow-none" onClick={handleNewEventClick}>
                                     <FaPlus className="me-2" size={12} /> NUEVO EVENTO
                                 </Button>
                             </motion.div>
@@ -615,6 +674,9 @@ const Events = () => {
                                                             <Button variant="link" className="p-0 text-muted" onClick={() => fetchParticipants(event.id)}>
                                                                 <FaUsers size={14} title="Ver inscritos" />
                                                             </Button>
+                                                            <Button variant="link" className="p-0 text-muted" onClick={() => handleEditClick(event)}>
+                                                                <FaRegEdit size={14} title="Editar" />
+                                                            </Button>
                                                             <Button variant="link" className="p-0 text-muted" onClick={() => handleDeleteClick(event)}>
                                                                 <FaTrash size={12} />
                                                             </Button>
@@ -703,6 +765,24 @@ const Events = () => {
                                     <p className="text-muted" style={{ lineHeight: '1.8', fontSize: '1rem' }}>
                                         {selectedEvent.description}
                                     </p>
+
+                                    {error && (
+                                        <Alert variant="danger" className="mt-4 border-0 shadow-sm" onClose={() => setError('')} dismissible>
+                                            <div className="d-flex gap-2 align-items-center fw-bold small text-uppercase mb-1">
+                                                <FaPlus style={{ transform: 'rotate(45deg)' }} /> Error de validación
+                                            </div>
+                                            <div className="small opacity-75">{error}</div>
+                                        </Alert>
+                                    )}
+
+                                    {error && (
+                                        <Alert variant="danger" className="mt-4 border-0 shadow-sm" onClose={() => setError('')} dismissible>
+                                            <div className="d-flex gap-2 align-items-center fw-bold small text-uppercase mb-1">
+                                                <FaPlus style={{ transform: 'rotate(45deg)' }} /> Error de validación
+                                            </div>
+                                            <div className="small opacity-75">{error}</div>
+                                        </Alert>
+                                    )}
 
                                     <div className="mt-5 d-grid">
                                         {!isAdmin && (

@@ -291,15 +291,47 @@ const Dashboard = () => {
                           </tr>
                         </thead>
                         <tbody>
-                          {history.length > 0 ? history.map((log) => (
-                            <tr key={log.id}>
-                              <td>{new Date(log.created_at).toLocaleString()}</td>
-                              <td className="fw-bold">{log.nombre || log.user_identificacion || 'Admin'}</td>
-                              <td className="text-institutional">{log.field_name}</td>
-                              <td className="text-muted">{log.old_value || '-'}</td>
-                              <td className="fw-bold">{log.new_value}</td>
-                            </tr>
-                          )) : (
+                          {history.length > 0 ? history.map((log) => {
+                            const formatFieldName = (field) => {
+                              const map = {
+                                'nombre': 'Nombre',
+                                'telefono': 'Teléfono',
+                                'correo_personal': 'Correo',
+                                'direccion_domicilio': 'Dirección',
+                                'barrio': 'Barrio',
+                                'ciudad': 'Ciudad',
+                                'cargo_actual': 'Cargo',
+                                'nombre_empresa': 'Empresa',
+                                'sector_economico': 'Sector',
+                                'rango_salarial': 'Salario',
+                                'estudios_adicionales': 'Estudios',
+                                'profesion': 'Profesión',
+                                'programa_academico': 'Programa',
+                                'fecha_actualizacion': 'Fecha Act.',
+                                'laboralmente_activo': 'Laboral',
+                                'ejerce_perfil_profesional': 'Ejerce',
+                                'reconocimientos': 'Méritos'
+                              };
+                              return map[field] || field.replace(/_/g, ' ');
+                            };
+
+                            const formatValue = (val, field) => {
+                              if (!val) return '-';
+                              if (field === 'estudios_adicionales') return 'Actualizado (Lista)';
+                              if (field.includes('fecha')) return new Date(val).toLocaleDateString();
+                              return val;
+                            };
+
+                            return (
+                              <tr key={log.id}>
+                                <td>{new Date(log.created_at).toLocaleString()}</td>
+                                <td className="fw-bold">{log.changed_by_nombre || log.changed_by_email || 'Admin'}</td>
+                                <td className="text-institutional text-capitalize">{formatFieldName(log.field_name)}</td>
+                                <td className="text-muted text-truncate" style={{ maxWidth: '150px' }} title={log.old_value}>{formatValue(log.old_value, log.field_name)}</td>
+                                <td className="fw-bold text-truncate" style={{ maxWidth: '150px' }} title={log.new_value}>{formatValue(log.new_value, log.field_name)}</td>
+                              </tr>
+                            );
+                          }) : (
                             <tr>
                               <td colSpan="5" className="text-center py-4 text-muted">No hay actividad reciente</td>
                             </tr>
@@ -379,7 +411,7 @@ const Dashboard = () => {
                           {recentUsers.length > 0 ? recentUsers.map((u) => (
                             <tr key={u.id}>
                               <td className="fw-bold text-serious">{u.nombre || 'Sin perfil'}</td>
-                              <td>{u.identificacion}</td>
+                              <td>{u.identificacion || u.documento || '-'}</td>
                               <td className="text-institutional">{u.programa_academico || '-'}</td>
                               <td className="text-muted">
                                 {u.last_login ? new Date(u.last_login).toLocaleString() : 'Nunca'}

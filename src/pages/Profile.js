@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Form, Button, Card, Alert } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { FaUser, FaGraduationCap, FaBriefcase, FaCheckCircle, FaClipboardCheck } from 'react-icons/fa';
+import { motion, AnimatePresence } from 'framer-motion';
+import { FaUser, FaGraduationCap, FaBriefcase, FaCheckCircle, FaClipboardCheck, FaPlus, FaTrash } from 'react-icons/fa';
 import api from '../services/api';
 
 const Profile = () => {
@@ -29,14 +29,10 @@ const Profile = () => {
     reconocimientos: '',
     tratamiento_datos: '',
     has_estudios_adicionales: 'NO',
-    estudio_adicional_fesc: 'NO',
-    programa_adicional_fesc: '',
-    programa_adicional_otro: '',
-    institucion_adicional_otro: '',
+    estudios_adicionales: [], // Array of { id, es_fesc, programa, institucion }
+    detalles_laborales: null,
     nombre_negocio: '',
-    tiempo_negocio: '',
-    estudios_adicionales: null, // For JSON storage
-    detalles_laborales: null // For JSON storage
+    tiempo_negocio: ''
   });
 
   const [message, setMessage] = useState('');
@@ -57,7 +53,6 @@ const Profile = () => {
   ];
 
   const sedes = ["Sede FESC Cúcuta", "Sede FESC Ocaña"];
-  const opcionesLaborales = ["SI", "NO", "Soy Independiente", "Tengo mi propio Negocio y/o Emprendimiento"];
   const sectores = [
     "Sector Elaboración de bienes o productos de consumo", "Sector Educativo", "Sector Comercial (Ventas)",
     "Sector Financiero y/o Bancario", "Sector Inmobiliario", "Sector Salud", "Sector Investigación y Tecnología",
@@ -86,6 +81,18 @@ const Profile = () => {
 
       if (response.data) {
         const d = response.data;
+
+        // Parse estudios_adicionales flexibly
+        let estudios = [];
+        if (d.estudios_adicionales) {
+          if (Array.isArray(d.estudios_adicionales)) {
+            estudios = d.estudios_adicionales.map((e, i) => ({ ...e, id: i }));
+          } else if (typeof d.estudios_adicionales === 'object') {
+            // Legacy single object support
+            estudios = [{ ...d.estudios_adicionales, id: 0 }];
+          }
+        }
+
         setFormData({
           email: user?.email || '',
           correo_personal: d.correo_personal || '',
@@ -106,14 +113,9 @@ const Profile = () => {
           profesion: d.profesion || '',
           reconocimientos: d.reconocimientos || '',
           tratamiento_datos: d.tratamiento_datos ? 'SI' : 'NO',
-          has_estudios_adicionales: d.estudios_adicionales ? 'SI' : 'NO',
-          estudios_adicionales: d.estudios_adicionales || null,
+          has_estudios_adicionales: estudios.length > 0 ? 'SI' : 'NO',
+          estudios_adicionales: estudios,
           detalles_laborales: d.detalles_laborales || null,
-          // Extract specific fields if they exist in JSON
-          estudio_adicional_fesc: d.estudios_adicionales?.es_fesc ? 'SI' : 'NO',
-          programa_adicional_fesc: d.estudios_adicionales?.es_fesc ? d.estudios_adicionales?.programa : '',
-          programa_adicional_otro: !d.estudios_adicionales?.es_fesc ? d.estudios_adicionales?.programa : '',
-          institucion_adicional_otro: d.estudios_adicionales?.institucion || '',
           nombre_negocio: d.detalles_laborales?.nombre_negocio || '',
           tiempo_negocio: d.detalles_laborales?.tiempo_negocio || ''
         });
@@ -131,8 +133,34 @@ const Profile = () => {
     }));
   };
 
+  // Studies Management
+  const addStudy = () => {
+    setFormData(prev => ({
+      ...prev,
+      estudios_adicionales: [
+        ...prev.estudios_adicionales,
+        { id: Date.now(), es_fesc: '', programa: '', institucion: '' }
+      ]
+    }));
+  };
+
+  const removeStudy = (id) => {
+    setFormData(prev => ({
+      ...prev,
+      estudios_adicionales: prev.estudios_adicionales.filter(s => s.id !== id)
+    }));
+  };
+
+  const updateStudy = (id, field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      estudios_adicionales: prev.estudios_adicionales.map(s =>
+        s.id === id ? { ...s, [field]: value } : s
+      )
+    }));
+  };
+
   const nextStep = () => {
-    // Basic validation for current step
     if (currentStep === 1) {
       const requiredFields = ['correo_personal', 'nombre', 'identificacion', 'telefono', 'ciudad_residencia', 'barrio', 'direccion_domicilio'];
       const missing = requiredFields.filter(field => !formData[field] || formData[field].toString().trim() === '');
@@ -146,6 +174,23 @@ const Profile = () => {
         setError('Por favor complete todos los campos obligatorios del paso 2.');
         window.scrollTo(0, 0);
         return;
+      }
+      if (formData.has_estudios_adicionales === 'SI') {
+        if (formData.estudios_adicionales.length === 0) {
+          setError('Si indicó tener estudios adicionales, por favor agregue al menos uno.');
+          window.scrollTo(0, 0);
+          return;
+        }
+        const incomplete = formData.estudios_adicionales.some(s =>
+          !s.es_fesc ||
+          (s.es_fesc === 'SI' && !s.programa) ||
+          (s.es_fesc === 'NO' && (!s.programa || !s.institucion))
+        );
+        if (incomplete) {
+          setError('Por favor complete la información de todos los estudios adicionales agregados.');
+          window.scrollTo(0, 0);
+          return;
+        }
       }
     } else if (currentStep === 3) {
       if (!formData.laboralmente_activo) {
@@ -162,7 +207,6 @@ const Profile = () => {
             return;
           }
         } else {
-          // Independent / Business
           if (!formData.nombre_negocio || !formData.sector_economico) {
             setError('Por favor complete los datos de su negocio/actividad.');
             window.scrollTo(0, 0);
@@ -176,6 +220,7 @@ const Profile = () => {
     window.scrollTo(0, 0);
     setCurrentStep(prev => Math.min(prev + 1, 4));
   };
+
   const prevStep = () => {
     window.scrollTo(0, 0);
     setCurrentStep(prev => Math.max(prev - 1, 1));
@@ -198,12 +243,8 @@ const Profile = () => {
       let payload = {
         ...formData,
         tratamiento_datos: true,
-        estudios_adicionales: formData.has_estudios_adicionales === 'SI' ? {
-          es_fesc: formData.estudio_adicional_fesc === 'SI',
-          programa: formData.estudio_adicional_fesc === 'SI' ? formData.programa_adicional_fesc : formData.programa_adicional_otro,
-          institucion: formData.estudio_adicional_fesc === 'SI' ? 'FESC' : formData.institucion_adicional_otro
-        } : null,
-        detalles_laborales: (formData.laboralmente_activo === 'Soy Independiente' || formData.laboralmente_activo === 'Tengo mi propio Negocio y/o Emprendimiento') ? {
+        estudios_adicionales: formData.has_estudios_adicionales === 'SI' ? formData.estudios_adicionales.map(({ id, ...rest }) => rest) : null,
+        detalles_laborales: (formData.laboralmente_activo.includes('Independiente') || formData.laboralmente_activo.includes('Negocio')) ? {
           nombre_negocio: formData.nombre_negocio,
           tiempo_negocio: formData.tiempo_negocio
         } : null
@@ -221,23 +262,21 @@ const Profile = () => {
           detalles_laborales: null
         };
       } else if (formData.laboralmente_activo !== 'SI') {
-        // Independent / Business - clear employee specific fields
+        // Independent / Business
         payload = {
           ...payload,
           cargo_actual: 'Independiente / Dueño',
           nombre_empresa: formData.nombre_negocio,
-          rango_salarial: formData.rango_salarial || 'Variable'
+          rango_salarial: formData.rango_salarial || 'Variable',
+          empresa: formData.nombre_negocio // Mapping for compatibility
         };
       }
 
       await api.put('/profile', payload);
       setMessage('¡Perfil actualizado con éxito! Redirigiendo...');
 
-      // Update local storage user data if name changed
       const user = JSON.parse(localStorage.getItem('user'));
       localStorage.setItem('user', JSON.stringify({ ...user, nombre: formData.nombre }));
-
-      // Temporary flag to bypass stale cache in Events page
       localStorage.setItem('profileJustUpdated', new Date().getTime().toString());
 
       setTimeout(() => {
@@ -261,37 +300,25 @@ const Profile = () => {
 
     return (
       <div className="d-flex justify-content-between mb-5 position-relative px-2">
-        <div
-          className="position-absolute bg-light-pro"
-          style={{ height: '2px', top: '20px', left: '10%', right: '10%', zIndex: 0 }}
-        />
+        <div className="position-absolute bg-light-pro" style={{ height: '2px', top: '20px', left: '10%', right: '10%', zIndex: 0 }} />
         <div
           className="position-absolute bg-institutional transition-fast"
-          style={{
-            height: '2px',
-            top: '20px',
-            left: '10%',
-            width: `${(currentStep - 1) * 26.6}%`,
-            zIndex: 0
-          }}
+          style={{ height: '2px', top: '20px', left: '10%', width: `${(currentStep - 1) * 26.6}%`, zIndex: 0 }}
         />
         {steps.map(step => (
           <div key={step.id} className="text-center" style={{ zIndex: 1, width: '60px' }}>
             <div
               className={`rounded-circle d-flex align-items-center justify-content-center mx-auto transition-fast mb-2 shadow-sm
-                ${currentStep >= step.id ? 'bg-institutional' : 'bg-card-pro border opacity-50'}`}
+                                ${currentStep >= step.id ? 'bg-institutional' : 'bg-card-pro border opacity-50'}`}
               style={{
-                width: '40px',
-                height: '40px',
+                width: '40px', height: '40px',
                 color: currentStep >= step.id ? 'white' : 'var(--institutional-red)',
                 border: currentStep >= step.id ? 'none' : '2px solid var(--border-light)'
               }}
             >
               {step.icon}
             </div>
-            <span className={`small fw-bold ${currentStep >= step.id ? 'text-institutional' : 'text-muted d-none d-md-block'}`}>
-              {step.label}
-            </span>
+            <span className={`small fw-bold ${currentStep >= step.id ? 'text-institutional' : 'text-muted d-none d-md-block'}`}>{step.label}</span>
           </div>
         ))}
       </div>
@@ -381,22 +408,16 @@ const Profile = () => {
                           <Col md={12}>
                             <Form.Group>
                               <Form.Label className="small fw-bold">PROGRAMA GRADUADO {formData.programa_academico && '(Solo Lectura)'} *</Form.Label>
-                              <Form.Select
-                                required
-                                name="programa_academico"
-                                value={formData.programa_academico}
-                                onChange={handleChange}
-                                className={`pro-input ${formData.programa_academico ? 'bg-light' : ''}`}
-                                disabled={!!formData.programa_academico}
-                              >
+                              <Form.Select required name="programa_academico" value={formData.programa_academico} onChange={handleChange} className={`pro-input ${formData.programa_academico ? 'bg-light' : ''}`} disabled={!!formData.programa_academico}>
                                 <option value="">Seleccione...</option>
                                 {programas.map((p, i) => <option key={i} value={p}>{p}</option>)}
                               </Form.Select>
-                              {formData.programa_academico && <Form.Text className="text-muted x-small">Este campo no se puede editar una vez registrado.</Form.Text>}
                             </Form.Group>
                           </Col>
+
+                          {/* Multiple Studies Section */}
                           <Col md={12} className="mt-5 border-top pt-4">
-                            <h6 className="fw-bold mb-3 text-institutional">¿Tienes otros estudios?</h6>
+                            <h6 className="fw-bold mb-3 text-institutional">Estudios Adicionales</h6>
                             <Form.Group className="mb-4">
                               <div className="d-flex gap-4">
                                 <Form.Check type="radio" label="SÍ" name="has_estudios_adicionales" value="SI" checked={formData.has_estudios_adicionales === 'SI'} onChange={handleChange} />
@@ -405,42 +426,71 @@ const Profile = () => {
                             </Form.Group>
 
                             {formData.has_estudios_adicionales === 'SI' && (
-                              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-light-pro p-4 rounded-4 border">
-                                <Form.Group className="mb-3">
-                                  <Form.Label className="small fw-bold">¿SON ESTUDIOS DE LA FESC? *</Form.Label>
-                                  <div className="d-flex gap-4 mb-3">
-                                    <Form.Check type="radio" label="SÍ" name="estudio_adicional_fesc" value="SI" checked={formData.estudio_adicional_fesc === 'SI'} onChange={handleChange} />
-                                    <Form.Check type="radio" label="NO" name="estudio_adicional_fesc" value="NO" checked={formData.estudio_adicional_fesc === 'NO'} onChange={handleChange} />
-                                  </div>
-                                </Form.Group>
+                              <div className="d-flex flex-column gap-3">
+                                <AnimatePresence>
+                                  {formData.estudios_adicionales.map((study, index) => (
+                                    <motion.div
+                                      key={study.id}
+                                      initial={{ opacity: 0, height: 0 }}
+                                      animate={{ opacity: 1, height: 'auto' }}
+                                      exit={{ opacity: 0, height: 0 }}
+                                      className="bg-light-pro p-4 rounded-4 border position-relative"
+                                    >
+                                      <Button variant="link" className="position-absolute top-0 end-0 p-3 text-danger" onClick={() => removeStudy(study.id)}>
+                                        <FaTrash size={14} />
+                                      </Button>
 
-                                {formData.estudio_adicional_fesc === 'SI' ? (
-                                  <Form.Group>
-                                    <Form.Label className="small fw-bold">PROGRAMA FESC *</Form.Label>
-                                    <Form.Select required name="programa_adicional_fesc" value={formData.programa_adicional_fesc} onChange={handleChange} className="pro-input">
-                                      <option value="">Seleccione el programa...</option>
-                                      {programas.map((p, i) => <option key={i} value={p}>{p}</option>)}
-                                    </Form.Select>
-                                  </Form.Group>
-                                ) : (
-                                  <Row className="g-3">
-                                    <Col md={6}>
-                                      <Form.Group>
-                                        <Form.Label className="small fw-bold">INSTITUCIÓN / UNIVERSIDAD *</Form.Label>
-                                        <Form.Control required type="text" name="institucion_adicional_otro" value={formData.institucion_adicional_otro} onChange={handleChange} className="pro-input" placeholder="Ej: Universidad de Santander" />
-                                      </Form.Group>
-                                    </Col>
-                                    <Col md={6}>
-                                      <Form.Group>
-                                        <Form.Label className="small fw-bold">PROGRAMA / CURSO *</Form.Label>
-                                        <Form.Control required type="text" name="programa_adicional_otro" value={formData.programa_adicional_otro} onChange={handleChange} className="pro-input" placeholder="Ej: Especialización en..." />
-                                      </Form.Group>
-                                    </Col>
-                                  </Row>
-                                )}
-                              </motion.div>
+                                      <h6 className="fw-bold small text-muted mb-3 uppercase">Estudio #{index + 1}</h6>
+
+                                      <Row className="g-3">
+                                        <Col md={12}>
+                                          <Form.Group>
+                                            <Form.Label className="small fw-bold">¿ES DE LA FESC?</Form.Label>
+                                            <div className="d-flex gap-4">
+                                              <Form.Check type="radio" label="SÍ" name={`es_fesc_${study.id}`} checked={study.es_fesc === 'SI'} onChange={() => updateStudy(study.id, 'es_fesc', 'SI')} />
+                                              <Form.Check type="radio" label="NO" name={`es_fesc_${study.id}`} checked={study.es_fesc === 'NO'} onChange={() => updateStudy(study.id, 'es_fesc', 'NO')} />
+                                            </div>
+                                          </Form.Group>
+                                        </Col>
+
+                                        {study.es_fesc === 'SI' ? (
+                                          <Col md={12}>
+                                            <Form.Group>
+                                              <Form.Label className="small fw-bold">PROGRAMA FESC</Form.Label>
+                                              <Form.Select value={study.programa} onChange={(e) => updateStudy(study.id, 'programa', e.target.value)} className="pro-input">
+                                                <option value="">Seleccione...</option>
+                                                {programas.map((p, i) => <option key={i} value={p}>{p}</option>)}
+                                              </Form.Select>
+                                            </Form.Group>
+                                          </Col>
+                                        ) : study.es_fesc === 'NO' && (
+                                          <>
+                                            <Col md={6}>
+                                              <Form.Group>
+                                                <Form.Label className="small fw-bold">INSTITUCIÓN</Form.Label>
+                                                <Form.Control value={study.institucion} onChange={(e) => updateStudy(study.id, 'institucion', e.target.value)} className="pro-input" placeholder="Ej: Universidad..." />
+                                              </Form.Group>
+                                            </Col>
+                                            <Col md={6}>
+                                              <Form.Group>
+                                                <Form.Label className="small fw-bold">PROGRAMA / CURSO</Form.Label>
+                                                <Form.Control value={study.programa} onChange={(e) => updateStudy(study.id, 'programa', e.target.value)} className="pro-input" placeholder="Ej: Diplomado..." />
+                                              </Form.Group>
+                                            </Col>
+                                          </>
+                                        )}
+                                      </Row>
+                                    </motion.div>
+                                  ))}
+                                </AnimatePresence>
+
+                                <Button variant="outline-institutional" onClick={addStudy} className="d-flex align-items-center justify-content-center gap-2 py-3 border-dashed">
+                                  <FaPlus /> AGREGAR OTRO ESTUDIO
+                                </Button>
+                              </div>
                             )}
                           </Col>
+
                           <Col md={12}>
                             <Form.Group>
                               <Form.Label className="small fw-bold">SEDE *</Form.Label>
@@ -456,137 +506,58 @@ const Profile = () => {
 
                     {currentStep === 3 && (
                       <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
-                        <h5 className="fw-bold mb-4">03. Situación Laboral</h5>
-                        <Row className="g-4">
-                          <Col md={12}>
-                            <Form.Group>
-                              <Form.Label className="small fw-bold d-block mb-3">¿ESTÁS LABORANDO ACTUALMENTE? *</Form.Label>
-                              <div className="d-flex flex-wrap gap-4">
-                                {opcionesLaborales.map((opt, i) => (
-                                  <Form.Check key={i} type="radio" label={opt} name="laboralmente_activo" value={opt} checked={formData.laboralmente_activo === opt} onChange={handleChange} required />
-                                ))}
-                              </div>
-                            </Form.Group>
-                          </Col>
+                        <h5 className="fw-bold mb-4">03. Información Laboral</h5>
+                        <Form.Group className="mb-4 bg-light-pro p-4 rounded-4 border">
+                          <Form.Label className="small fw-bold mb-3">¿LABORALMENTE ACTIVO? *</Form.Label>
+                          <div className="d-flex flex-column gap-2">
+                            {["SI", "NO", "Soy Independiente", "Tengo mi propio Negocio y/o Emprendimiento"].map((op, i) => (
+                              <Form.Check key={i} type="radio" label={op} name="laboralmente_activo" value={op} checked={formData.laboralmente_activo === op} onChange={handleChange} className="mb-2" />
+                            ))}
+                          </div>
+                        </Form.Group>
 
-                          {formData.laboralmente_activo !== 'NO' && formData.laboralmente_activo !== '' && (
-                            <>
-                              {formData.laboralmente_activo === 'SI' ? (
-                                <>
-                                  <Col md={12}>
-                                    <Form.Group>
-                                      <Form.Label className="small fw-bold d-block mb-3">¿EJERZES TU PERFIL PROFESIONAL? *</Form.Label>
-                                      <div className="d-flex gap-4">
-                                        <Form.Check type="radio" label="SÍ" name="ejerce_perfil_profesional" value="SI" checked={formData.ejerce_perfil_profesional === 'SI'} onChange={handleChange} required />
-                                        <Form.Check type="radio" label="NO" name="ejerce_perfil_profesional" value="NO" checked={formData.ejerce_perfil_profesional === 'NO'} onChange={handleChange} />
-                                      </div>
-                                    </Form.Group>
-                                  </Col>
-                                  <Col md={6}>
-                                    <Form.Group>
-                                      <Form.Label className="small fw-bold">CARGO ACTUAL *</Form.Label>
-                                      <Form.Control required type="text" name="cargo_actual" value={formData.cargo_actual} onChange={handleChange} className="pro-input" />
-                                    </Form.Group>
-                                  </Col>
-                                  <Col md={6}>
-                                    <Form.Group>
-                                      <Form.Label className="small fw-bold">EMPRESA *</Form.Label>
-                                      <Form.Control required type="text" name="nombre_empresa" value={formData.nombre_empresa} onChange={handleChange} className="pro-input" />
-                                    </Form.Group>
-                                  </Col>
-                                  <Col md={6}>
-                                    <Form.Group>
-                                      <Form.Label className="small fw-bold">SECTOR ECONÓMICO *</Form.Label>
-                                      <Form.Select required name="sector_economico" value={formData.sector_economico} onChange={handleChange} className="pro-input">
-                                        <option value="">Seleccione...</option>
-                                        {sectores.map((s, i) => <option key={i} value={s}>{s}</option>)}
-                                      </Form.Select>
-                                    </Form.Group>
-                                  </Col>
-                                  <Col md={6}>
-                                    <Form.Group>
-                                      <Form.Label className="small fw-bold">RANGO SALARIAL *</Form.Label>
-                                      <Form.Select required name="rango_salarial" value={formData.rango_salarial} onChange={handleChange} className="pro-input">
-                                        <option value="">Seleccione...</option>
-                                        {rangosSalarios.map((r, i) => <option key={i} value={r}>{r}</option>)}
-                                      </Form.Select>
-                                    </Form.Group>
-                                  </Col>
-                                </>
-                              ) : (
-                                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="col-12">
-                                  <Row className="g-4">
-                                    <Col md={12}>
-                                      <Form.Group>
-                                        <Form.Label className="small fw-bold">NOMBRE DE SU NEGOCIO / ACTIVIDAD *</Form.Label>
-                                        <Form.Control required type="text" name="nombre_negocio" value={formData.nombre_negocio} onChange={handleChange} className="pro-input" placeholder="Ej: Consultoría ABC / Tienda X" />
-                                      </Form.Group>
-                                    </Col>
-                                    <Col md={6}>
-                                      <Form.Group>
-                                        <Form.Label className="small fw-bold">SECTOR ECONÓMICO *</Form.Label>
-                                        <Form.Select required name="sector_economico" value={formData.sector_economico} onChange={handleChange} className="pro-input">
-                                          <option value="">Seleccione...</option>
-                                          {sectores.map((s, i) => <option key={i} value={s}>{s}</option>)}
-                                        </Form.Select>
-                                      </Form.Group>
-                                    </Col>
-                                    <Col md={6}>
-                                      <Form.Group>
-                                        <Form.Label className="small fw-bold">TIEMPO EN LA ACTIVIDAD</Form.Label>
-                                        <Form.Control type="text" name="tiempo_negocio" value={formData.tiempo_negocio} onChange={handleChange} className="pro-input" placeholder="Ej: 2 años / 6 meses" />
-                                      </Form.Group>
-                                    </Col>
-                                  </Row>
-                                </motion.div>
-                              )}
-                            </>
-                          )}
-                        </Row>
+                        {formData.laboralmente_activo === 'SI' && (
+                          <Row className="g-4">
+                            <Col md={12}><Form.Group><Form.Label className="small fw-bold">CARGO ACTUAL *</Form.Label><Form.Control required name="cargo_actual" value={formData.cargo_actual} onChange={handleChange} className="pro-input" /></Form.Group></Col>
+                            <Col md={12}><Form.Group><Form.Label className="small fw-bold">EMPRESA *</Form.Label><Form.Control required name="nombre_empresa" value={formData.nombre_empresa} onChange={handleChange} className="pro-input" /></Form.Group></Col>
+                            <Col md={6}><Form.Group><Form.Label className="small fw-bold">SECTOR ECONÓMICO *</Form.Label><Form.Select required name="sector_economico" value={formData.sector_economico} onChange={handleChange} className="pro-input"><option value="">Seleccione...</option>{sectores.map((s, i) => <option key={i} value={s}>{s}</option>)}</Form.Select></Form.Group></Col>
+                            <Col md={6}><Form.Group><Form.Label className="small fw-bold">RANGO SALARIAL *</Form.Label><Form.Select required name="rango_salarial" value={formData.rango_salarial} onChange={handleChange} className="pro-input"><option value="">Seleccione...</option>{rangosSalarios.map((r, i) => <option key={i} value={r}>{r}</option>)}</Form.Select></Form.Group></Col>
+                            <Col md={12}><Form.Group><Form.Label className="small fw-bold">¿EJERCE SU PERFIL PROFESIONAL? *</Form.Label><div className="d-flex gap-4"><Form.Check type="radio" label="SÍ" name="ejerce_perfil_profesional" value="SI" checked={formData.ejerce_perfil_profesional === 'SI'} onChange={handleChange} /><Form.Check type="radio" label="NO" name="ejerce_perfil_profesional" value="NO" checked={formData.ejerce_perfil_profesional === 'NO'} onChange={handleChange} /></div></Form.Group></Col>
+                          </Row>
+                        )}
+
+                        {(formData.laboralmente_activo === 'Soy Independiente' || formData.laboralmente_activo === 'Tengo mi propio Negocio y/o Emprendimiento') && (
+                          <Row className="g-4">
+                            <Col md={12}><Form.Group><Form.Label className="small fw-bold">NOMBRE DEL NEGOCIO / ACTIVIDAD *</Form.Label><Form.Control required name="nombre_negocio" value={formData.nombre_negocio} onChange={handleChange} className="pro-input" /></Form.Group></Col>
+                            <Col md={6}><Form.Group><Form.Label className="small fw-bold">SECTOR ECONÓMICO *</Form.Label><Form.Select required name="sector_economico" value={formData.sector_economico} onChange={handleChange} className="pro-input"><option value="">Seleccione...</option>{sectores.map((s, i) => <option key={i} value={s}>{s}</option>)}</Form.Select></Form.Group></Col>
+                            <Col md={6}><Form.Group><Form.Label className="small fw-bold">TIEMPO DE OPERACIÓN</Form.Label><Form.Control name="tiempo_negocio" value={formData.tiempo_negocio} onChange={handleChange} className="pro-input" placeholder="Ej: 2 años" /></Form.Group></Col>
+                          </Row>
+                        )}
+
+                        <Col md={12} className="mt-4"><Form.Group><Form.Label className="small fw-bold">RECONOCIMIENTOS / LOGROS (Opcional)</Form.Label><Form.Control as="textarea" rows={3} name="reconocimientos" value={formData.reconocimientos} onChange={handleChange} className="pro-input" /></Form.Group></Col>
                       </motion.div>
                     )}
 
                     {currentStep === 4 && (
-                      <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
-                        <h5 className="fw-bold mb-4">04. Consentimiento y Logros</h5>
-                        <Row className="g-4">
-                          <Col md={12}>
-                            <Form.Group>
-                              <Form.Label className="small fw-bold">MÉRITOS Y RECONOCIMIENTOS</Form.Label>
-                              <Form.Control as="textarea" rows={3} name="reconocimientos" value={formData.reconocimientos} onChange={handleChange} className="pro-input" placeholder="Opcional..." />
-                            </Form.Group>
-                          </Col>
-                          <Col md={12}>
-                            <div className="bg-light p-3 rounded-4 small text-muted mb-4">
-                              Autorizo a la FESC para el tratamiento de mis datos personales según su política de privacidad. Esta información será usada exclusivamente para fines institucionales.
-                            </div>
-                            <Form.Group>
-                              <Form.Label className="small fw-bold d-block mb-3">¿AUTORIZA EL TRATAMIENTO DE DATOS? *</Form.Label>
-                              <div className="d-flex gap-4">
-                                <Form.Check type="radio" label="SÍ, AUTORIZO" name="tratamiento_datos" value="SI" checked={formData.tratamiento_datos === 'SI'} onChange={handleChange} required className="fw-bold text-success" />
-                                <Form.Check type="radio" label="NO AUTORIZO" name="tratamiento_datos" value="NO" checked={formData.tratamiento_datos === 'NO'} onChange={handleChange} />
-                              </div>
-                            </Form.Group>
-                          </Col>
-                        </Row>
+                      <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="text-center py-4">
+                        <div className="mb-4 text-institutional"><FaCheckCircle size={64} /></div>
+                        <h4 className="fw-bold mb-3">¡Todo listo para actualizar!</h4>
+                        <p className="text-muted mb-4">Por favor revisa que toda la información sea correcta antes de enviar.</p>
+                        <div className="bg-light-pro p-4 rounded-4 mb-4 text-start small border">
+                          <Form.Check required type="checkbox" id="tratamiento_datos" label="Autorizo el tratamiento de mis datos personales según la política de privacidad de la FESC." checked={formData.tratamiento_datos === 'SI'} onChange={(e) => setFormData({ ...formData, tratamiento_datos: e.target.checked ? 'SI' : 'NO' })} className="fw-bold text-serious" />
+                        </div>
                       </motion.div>
                     )}
 
-                    <div className="d-flex justify-content-between mt-5 pt-4 border-top">
-                      <Button variant="light" className={`px-4 fw-bold text-muted ${currentStep === 1 ? 'invisible' : ''}`} onClick={prevStep}>
-                        VOLVER
-                      </Button>
-
+                    <div className="d-flex justify-content-between mt-5 pt-3 border-top">
+                      {currentStep > 1 && <Button variant="light" onClick={prevStep} className="px-4 fw-bold text-muted small">ATRÁS</Button>}
                       {currentStep < 4 ? (
-                        <Button className="btn-institutional px-5 fw-bold" onClick={nextStep}>
-                          CONTINUAR
-                        </Button>
+                        <Button className="btn-institutional px-5 ms-auto" onClick={nextStep}>SIGUIENTE</Button>
                       ) : (
-                        <Button className="btn-institutional px-5 fw-bold" type="submit" disabled={loading}>
-                          {loading ? 'GUARDANDO...' : 'FINALIZAR'}
-                        </Button>
+                        <Button type="submit" className="btn-institutional px-5 ms-auto" disabled={loading}>{loading ? 'GUARDANDO...' : 'FINALIZAR Y GUARDAR'}</Button>
                       )}
                     </div>
+
                   </Form>
                 </Card.Body>
               </Card>
