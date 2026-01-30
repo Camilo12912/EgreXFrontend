@@ -436,6 +436,17 @@ const Events = () => {
     };
 
     const handleEditClick = (event) => {
+        // Validation: Cannot edit if event is in progress or past
+        if (new Date(event.date) <= new Date()) {
+            setStatusConfig({
+                type: 'error',
+                title: 'Acción Restringida',
+                message: 'No puedes editar un evento que ya ha comenzado o finalizado.'
+            });
+            setShowStatusModal(true);
+            return;
+        }
+
         setFormData({
             title: event.title,
             description: event.description,

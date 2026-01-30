@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Navbar, Nav, Container, Dropdown } from 'react-bootstrap';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { FaUserCircle, FaSignOutAlt, FaUser, FaMoon, FaSun } from 'react-icons/fa';
+import { FaUserCircle, FaSignOutAlt, FaUser, FaMoon, FaSun, FaCode } from 'react-icons/fa';
 
 import logo from '../assets/logo.png';
 import Credits from './Credits';
@@ -209,6 +209,10 @@ const Navigation = () => {
                         <FaUser className="opacity-50" /> Mi Perfil
                       </Dropdown.Item>
                     )}
+
+                    <Dropdown.Item as={Link} to="/change-password" className="py-2 d-flex align-items-center gap-2 small fw-medium">
+                      <FaCode className="opacity-50" /> Cambiar Contraseña
+                    </Dropdown.Item>
 
                     <Dropdown.Divider />
 
