@@ -1,9 +1,18 @@
 import axios from 'axios';
 
+const getBaseURL = () => {
+  const envUrl = process.env.REACT_APP_API_URL;
+  if (!envUrl) return '/api';
+
+  // Si no tiene http/https, lo forzamos para evitar URL relativas fallidas en Vercel
+  const normalizedUrl = envUrl.startsWith('http') ? envUrl : `https://${envUrl}`;
+
+  // Eliminamos slash final si lo tiene y añadimos /api
+  return `${normalizedUrl.replace(/\/$/, '')}/api`;
+};
+
 const api = axios.create({
-  baseURL: process.env.REACT_APP_API_URL
-    ? `${process.env.REACT_APP_API_URL}/api`
-    : '/api',
+  baseURL: getBaseURL(),
   headers: {
     'Content-Type': 'application/json',
   },
