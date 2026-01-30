@@ -397,14 +397,7 @@ const Events = () => {
             // Sending 'imageUrl' as text might be confusing the backend if it expects a file or nothing.
             // However, if the backend logic relies on 'imageUrl' being present to KEEP it, removing it is bad.
             // The USER says it IS getting deleted now. So clearly current logic is failing.
-            // Current: sends 'imageUrl' string.
-            // Failure: Image lost.
-            // Hypothesis: Backend sees 'imageUrl' string in body, tries to use it, fails? 
-            // OR: Backend sees NO file, sets image_url = null.
 
-            // To be safe, I will View the backend code in the next step. 
-            // For now, I will NOT modify Events.js in this tool call, to avoid breaking it further.
-            // I will only fix the other two.
 
 
             if (isEditing) {
