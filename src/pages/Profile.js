@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaUser, FaGraduationCap, FaBriefcase, FaCheckCircle, FaClipboardCheck, FaPlus, FaTrash } from 'react-icons/fa';
 import api from '../services/api';
+import { CAREERS } from '../utils/constants';
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -39,18 +40,7 @@ const Profile = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const programas = [
-    "Técnico Procesos Contables", "Tecnología Gestión Financiera", "Administración Financiera",
-    "Técnico Mercadotecnia", "Tecnología Gestión Negocios Internacionales", "Administración Negocios Internacionales presencial",
-    "Técnico Procesos Diseño Modas", "Tecnología Gestión Diseño Modas", "Diseño Administración Negocios de la Moda",
-    "Técnico Procesos Aduaneros", "Tecnología Comercio Internacional", "Administración Negocios internacionales",
-    "Técnico Operaciones logísticas", "Tecnología Logística Empresarial",
-    "Técnico Operaciones Turísticas", "Tecnología Servicios de bienestar Turísticos", "Administración Turística y Hotelera",
-    "Técnico Producción Grafica", "Tecnología Gestión Contenidos Gráficos Publicitarios", "Diseño Gráfico",
-    "Técnico Profesional En Soporte informático", "Tecnólogo En Desarrollo De Software", "Ingeniería De Software",
-    "Tecnología Administración Redes", "Tecnología Administración Informática",
-    "Tecnología Mercadotecnia y Cio. Internacional", "Especialización en Gestión Pública"
-  ];
+  const programas = CAREERS;
 
   const sedes = ["Sede FESC Cúcuta", "Sede FESC Ocaña"];
   const sectores = [

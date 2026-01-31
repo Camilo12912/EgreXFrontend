@@ -7,6 +7,7 @@ import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
 import { useAlumni } from '../presentation/hooks/useAlumni';
+import { CAREERS } from '../utils/constants';
 
 const AdminUsers = () => {
     // Use Clean Architecture Hook
@@ -41,18 +42,7 @@ const AdminUsers = () => {
     const [filterField, setFilterField] = useState('all'); // all, nombre, identificacion
     const [careerFilter, setCareerFilter] = useState('');
 
-    const programas = [
-        "Técnico Procesos Contables", "Tecnología Gestión Financiera", "Administración Financiera",
-        "Técnico Mercadotecnia", "Tecnología Gestión Negocios Internacionales", "Administración Negocios Internacionales presencial",
-        "Técnico Procesos Diseño Modas", "Tecnología Gestión Diseño Modas", "Diseño Administración Negocios de la Moda",
-        "Técnico Procesos Aduaneros", "Tecnología Comercio Internacional", "Administración Negocios internacionales",
-        "Técnico Operaciones logísticas", "Tecnología Logística Empresarial",
-        "Técnico Operaciones Turísticas", "Tecnología Servicios de bienestar Turísticos", "Administración Turística y Hotelera",
-        "Técnico Producción Grafica", "Tecnología Gestión Contenidos Gráficos Publicitarios", "Diseño Gráfico",
-        "Técnico Profesional En Soporte informático", "Tecnólogo En Desarrollo De Software", "Ingeniería De Software",
-        "Tecnología Administración Redes", "Tecnología Administración Informática",
-        "Tecnología Mercadotecnia y Cio. Internacional", "Especialización en Gestión Pública"
-    ];
+    const programas = CAREERS;
 
     useEffect(() => {
         fetchUsers({ programa_academico: careerFilter });
